@@ -14,12 +14,14 @@ public class GameDialog : MonoBehaviour, IDisposable {
     private GameScoreCounter _counter;
     public QTESystem QTESystem => _qTESystem;
 
-    public void Init(GameScoreCounter counter) {
+    public void Init(GameScoreCounter counter, QTEEventConfigs qTEEventConfigs) {
         _counter = counter;
+        _qTESystem.Init(qTEEventConfigs.Configs);
 
         AddListener();
         ResetLabelText();
 
+        _resultPanel.Init(_counter.Score);
         _resultPanel.gameObject.SetActive(false);       
     }
 
@@ -61,10 +63,10 @@ public class GameDialog : MonoBehaviour, IDisposable {
 
     private void OnSheepIsOver() {
         _resultPanel.gameObject.SetActive(true);
-        _resultPanel.Init(_counter.Score);
     }
 
     private void OnResetClicked() {
+        Debug.Log("GameDialog: OnResetClicked");
         _resultPanel.gameObject.SetActive(false);
         ResetLabelText();
 

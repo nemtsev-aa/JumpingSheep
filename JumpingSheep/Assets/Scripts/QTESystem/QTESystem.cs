@@ -8,7 +8,6 @@ public class QTESystem : MonoBehaviour, IDisposable {
     public event Action<bool> Finished;
 
     [SerializeField] private TextMeshProUGUI _resultLabel;
-    [SerializeField] private List<QTEEventConfig> Configs = new List<QTEEventConfig>();
     [SerializeField] private QTEEvent _qTEEventPrefab;
     [SerializeField] private QTEEventView _qTEEventViewPrefab;
     [SerializeField] private RectTransform _qTEEventViewsParent;
@@ -16,14 +15,18 @@ public class QTESystem : MonoBehaviour, IDisposable {
     private List<QTEEvent> _events = new List<QTEEvent>();
     private List<QTEEventView> _eventViews = new List<QTEEventView>();
     private QTEEvent _currentEvent;
+    private List<QTEEventConfig> _configs = new List<QTEEventConfig>();
 
-    public void Init() {
+    public void Init(List<QTEEventConfig> configs) {
+        _configs.AddRange(configs);
         _qTEEventViewsParent.transform.gameObject.SetActive(false);
-        CreateEvents();
     }
 
-    public void StartFirstEvent() {
-        _qTEEventViewsParent.transform.gameObject.SetActive(true);
+    public void StartEvents() {
+        if (_events.Count == 0) {
+            _qTEEventViewsParent.transform.gameObject.SetActive(true);
+            CreateEvents();
+        }
 
         _currentEvent = _events[0];
         _currentEvent.enabled = true;
@@ -36,9 +39,9 @@ public class QTESystem : MonoBehaviour, IDisposable {
     }
 
     private void CreateEvents() {
-        for (int i = 0; i < Configs.Count; i++) {
-            var index = UnityEngine.Random.Range(0, Configs.Count); 
-            QTEEventConfig config = Configs[index];
+        for (int i = 0; i < _configs.Count; i++) {
+            var index = UnityEngine.Random.Range(0, _configs.Count); 
+            QTEEventConfig config = _configs[index];
 
             CreateEvent(config);
         }
@@ -74,7 +77,7 @@ public class QTESystem : MonoBehaviour, IDisposable {
                 Finished?.Invoke(true);
             }
             else
-                StartFirstEvent();
+                StartEvents();
         }
     }
 

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.08047378, g: 0.09986861, b: 0.30126882, a: 1}
+  m_IndirectSpecularColor: {r: 0.080407284, g: 0.099805504, b: 0.3012151, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2109,6 +2109,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a4c6b64739636546af01261f6f3855c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _qTEEventConfigs: {fileID: 11400000, guid: 4ecae17adbfadbb43b84c5dc265150f8, type: 2}
   _factory: {fileID: 11400000, guid: bb36799bc46b47747821188828ed3e40, type: 2}
   _spawner: {fileID: 643347009}
   _gameDialog: {fileID: 1993400532}
@@ -2389,19 +2390,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _resultLabel: {fileID: 2041010401}
-  Configs:
-  - <KeyText>k__BackingField: "\u0424"
-    <KeyKode>k__BackingField: 97
-    <KeyTime>k__BackingField: 1.5
-  - <KeyText>k__BackingField: "\u042B"
-    <KeyKode>k__BackingField: 115
-    <KeyTime>k__BackingField: 1.5
-  - <KeyText>k__BackingField: "\u0412"
-    <KeyKode>k__BackingField: 100
-    <KeyTime>k__BackingField: 1.5
-  - <KeyText>k__BackingField: "\u0426"
-    <KeyKode>k__BackingField: 119
-    <KeyTime>k__BackingField: 1.5
   _qTEEventPrefab: {fileID: 307241316938915529, guid: c4a830c4c705cf547b14c2d7798bc75d,
     type: 3}
   _qTEEventViewPrefab: {fileID: 1184351228810155961, guid: e69696c4edc810747941faed296eb1b9,

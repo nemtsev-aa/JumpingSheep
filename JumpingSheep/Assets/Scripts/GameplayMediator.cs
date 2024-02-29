@@ -1,11 +1,13 @@
 using System;
+using UnityEngine;
 
 public class GameplayMediator : IDisposable {
     private SheepSpawner _spawner;
     private GameScoreCounter _scoreCounter;
+    private GameDialog _gameDialog;
+    
     private QTESystem _qTESystem;
     private Sheep _currentSheep;
-    private GameDialog _gameDialog;
     private bool _sheepOver;
 
     public GameplayMediator(SheepSpawner spawner, GameScoreCounter scoreCounter, GameDialog dialog) {
@@ -21,9 +23,6 @@ public class GameplayMediator : IDisposable {
 
     public void StartGame() {
         _spawner.CreateSheep();
-
-        _currentSheep.EventsHandler.Striked += OnStriked;
-        _currentSheep.EventsHandler.Jumped += OnJumped;
     }
 
     private void AddListener() {
@@ -32,34 +31,35 @@ public class GameplayMediator : IDisposable {
         _scoreCounter.SheepIsOver += OnSheepIsOver;
     }
 
-
     private void RemoveLisener() {
         _spawner.SheepCreated -= OnSheepCreated;
-        _currentSheep.EventsHandler.Striked -= OnStriked;
-        _currentSheep.EventsHandler.Jumped -= OnJumped;
-
         _gameDialog.ResetClicked -= OnResetClicked;
         _scoreCounter.SheepIsOver -= OnSheepIsOver;
     }
 
-
     private void OnSheepCreated(Sheep sheep) {
         _currentSheep = sheep;
         _currentSheep.Init(_qTESystem);
+
+        _currentSheep.EventsHandler.Striked += OnSheepStriked;
+        _currentSheep.EventsHandler.Jumped += OnSheepJumped;
     }
 
-    private void OnStriked() {
+    private void OnSheepStriked() {
         _scoreCounter.AddStrike();
-
+        
         _spawner.DestroyCurrentSheep();
-        _spawner.CreateSheep();
+
+        if (_sheepOver == false)
+            _spawner.CreateSheep();
     }
 
-    private void OnJumped() {
+    private void OnSheepJumped() {
         _scoreCounter.AddJump();
-
         _spawner.DestroyCurrentSheep();
-        _spawner.CreateSheep();
+
+        if (_sheepOver == false)
+            _spawner.CreateSheep();
     }
 
     private void OnSheepIsOver() {
@@ -67,10 +67,13 @@ public class GameplayMediator : IDisposable {
     }
 
     private void OnResetClicked() {
+        Debug.Log("GameplayMediator: OnResetClicked");
+
         _scoreCounter.Reset();
         _qTESystem.Reset();
+        _sheepOver = false;
 
-
+        StartGame();
     }
 
     public void Dispose() {

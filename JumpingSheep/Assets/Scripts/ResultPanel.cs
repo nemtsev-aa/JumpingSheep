@@ -13,6 +13,7 @@ public class ResultPanel : MonoBehaviour, IDisposable {
     public void Init(string score) {
         _resultLabel.text = "Результат";
         _scoreText.text = score;
+        
         AddListener();
     }
 

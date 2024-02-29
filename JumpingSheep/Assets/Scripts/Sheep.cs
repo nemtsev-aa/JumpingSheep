@@ -29,7 +29,6 @@ public class Sheep : MonoBehaviour {
         EventsHandler = GetComponentInChildren<AnimatorEventsHandler>();
 
         _qTESystem = qTESystem;
-        _qTESystem.Init();
         _qTESystem.Finished += OnQTESystemFinished;
 
         _animator.SetBool(IsMove, true);
@@ -39,7 +38,7 @@ public class Sheep : MonoBehaviour {
 
     private void Update() {
         if (_isTrigger == true && _QTEActive == false) {
-            _qTESystem.StartFirstEvent();
+            _qTESystem.StartEvents();
             _QTEActive = true;
         }
 
