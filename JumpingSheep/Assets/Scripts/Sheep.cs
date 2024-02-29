@@ -1,51 +1,84 @@
-using System;
 using UnityEngine;
 
 public class Sheep : MonoBehaviour {
-    public event Action FenceCollide;
-    public event Action EndRoadCollide;
+    private const string IsMove = "IsMove";
+    private const string IsJump = "IsJump";
+    private const string IsStrike = "IsStrike";
 
-    [SerializeField] private float _moveSpeed;
+    [SerializeField] private float _moveSpeed = 0.5f;
+    [SerializeField] private float _slowMoveSpeed = 0.2f;
     [SerializeField] private float _friction;
-    [SerializeField] private float _jumpSpeed;
 
     private Rigidbody _rigidbody;
-    private bool _isMove = false;
-    
+    private Animator _animator;
 
-    private void Awake() {
+    private float _currentSpeed;
+    private bool _isMoved = true;
+    private bool _isTrigger = false;
+
+    private bool _QTEActive = false;
+    private bool _qTEResult = false;
+    private QTESystem _qTESystem;
+
+    public AnimatorEventsHandler EventsHandler { get; private set; }
+
+    public void Init(QTESystem qTESystem) {
         _rigidbody = GetComponent<Rigidbody>();
-        StartMove();
+        _animator = GetComponentInChildren<Animator>();
+
+        EventsHandler = GetComponentInChildren<AnimatorEventsHandler>();
+
+        _qTESystem = qTESystem;
+        _qTESystem.Init();
+        _qTESystem.Finished += OnQTESystemFinished;
+
+        _animator.SetBool(IsMove, true);
+        _currentSpeed = _moveSpeed;
     }
 
-    [ContextMenu(nameof(StartMove))]
-    public void StartMove() {
-        _isMove = true;
-    }
 
-    [ContextMenu(nameof(StopMove))]
-    public void StopMove() {
-        _isMove = false;
+    private void Update() {
+        if (_isTrigger == true && _QTEActive == false) {
+            _qTESystem.StartFirstEvent();
+            _QTEActive = true;
+        }
+
+        if (_isMoved == false && _qTESystem != null) {
+            _animator.SetBool(IsMove, false);
+
+            if (_qTEResult == true)
+                _animator.SetBool(IsJump, true);
+            else
+                _animator.SetBool(IsStrike, true);
+
+            _qTESystem.Reset();
+            _qTESystem = null;
+        }
     }
 
     private void FixedUpdate() {
-        if (_isMove) {
-            _rigidbody.AddForce(Input.GetAxis("Horizontal") * _moveSpeed, 0, 0, ForceMode.Acceleration);
+        if (_isMoved == true) {
+            _rigidbody.AddForce(_currentSpeed, 0, 0, ForceMode.VelocityChange);
             _rigidbody.AddForce(-_rigidbody.velocity.x * _friction, 0, 0, ForceMode.VelocityChange);
-
-            if (Input.GetKeyDown(KeyCode.Space)) {
-                _rigidbody.AddForce(0, _jumpSpeed, 0, ForceMode.VelocityChange);
-            }
         }
     }
 
-    private void OnCollisionEnter(Collision collision) {
-        if (collision.rigidbody.TryGetComponent(out Fence fence)) {
-            FenceCollide?.Invoke();
+    private void OnTriggerEnter(Collider other) {
+        if (other.gameObject.CompareTag("ClickTrigger")) {
+            _isTrigger = true;
+            _currentSpeed = _slowMoveSpeed;
         }
+    }
 
-        if (collision.rigidbody.TryGetComponent(out EndRoad endRoad)) {
-            EndRoadCollide?.Invoke();
+    private void OnTriggerExit(Collider other) {
+        if (other.gameObject.CompareTag("ClickTrigger")) {
+            _isTrigger = false;
+            _isMoved = false;
         }
+    }
+
+    private void OnQTESystemFinished(bool qTEResult) {
+        _qTEResult = qTEResult;
+        _currentSpeed = _moveSpeed;
     }
 }
