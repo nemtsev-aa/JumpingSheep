@@ -11,6 +11,8 @@ public class Sheep : MonoBehaviour {
 
     private Rigidbody _rigidbody;
     private Animator _animator;
+    private SheepSoundManager _soundManager;
+    private QTESystem _qTESystem;
 
     private float _currentSpeed;
     private bool _isMoved = true;
@@ -18,18 +20,19 @@ public class Sheep : MonoBehaviour {
 
     private bool _QTEActive = false;
     private bool _qTEResult = false;
-    private QTESystem _qTESystem;
 
     public AnimatorEventsHandler EventsHandler { get; private set; }
 
     public void Init(QTESystem qTESystem) {
         _rigidbody = GetComponent<Rigidbody>();
         _animator = GetComponentInChildren<Animator>();
-
+        _soundManager = GetComponent<SheepSoundManager>();
         EventsHandler = GetComponentInChildren<AnimatorEventsHandler>();
 
+        _soundManager.Init(this);
+
         _qTESystem = qTESystem;
-        _qTESystem.Finished += OnQTESystemFinished;
+        _qTESystem.Completed += OnQTESystemFinished;
 
         _animator.SetBool(IsMove, true);
         _currentSpeed = _moveSpeed;

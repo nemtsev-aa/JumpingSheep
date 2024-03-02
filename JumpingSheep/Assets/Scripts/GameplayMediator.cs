@@ -2,38 +2,75 @@ using System;
 using UnityEngine;
 
 public class GameplayMediator : IDisposable {
-    private SheepSpawner _spawner;
-    private GameScoreCounter _scoreCounter;
-    private GameDialog _gameDialog;
-    
-    private QTESystem _qTESystem;
+    private readonly SheepSpawner _spawner;
+    private readonly SheepQuantityCounter _scoreCounter;
+    private readonly UIManager _uIManager;
+    private readonly DialogSwitcher _dialogSwitcher;
+
+    private readonly QTESystem _qTESystem;
     private Sheep _currentSheep;
     private bool _sheepOver;
 
-    public GameplayMediator(SheepSpawner spawner, GameScoreCounter scoreCounter, GameDialog dialog) {
+    public GameplayMediator(SheepSpawner spawner, SheepQuantityCounter scoreCounter, UIManager uIManager) {
         _spawner = spawner;
         _scoreCounter = scoreCounter;
-        _qTESystem = dialog.QTESystem;
-        _gameDialog = dialog;
+        _uIManager = uIManager;
+
+        _dialogSwitcher = uIManager.DialogSwitcher;
+        _qTESystem = GameDialog.QTESystem;
     }
+
+    private MainMenuDialog MainMenuDialog => _uIManager.MainMenuDialog;
+    private GameDialog GameDialog => _uIManager.GameDialog;
+    private SettingsDialog SettingsDialog => _uIManager.SettingsDialog;
+    private AboutDialog AboutDialog => _uIManager.AboutDialog;
 
     public void Init() {
-          AddListener();
+        AddListener();
     }
 
-    public void StartGame() {
+    public void StartGameplay() {
         _spawner.CreateSheep();
     }
 
+    #region Switching Dialogs
+
+    public void ShowMainMenuDialog() => _dialogSwitcher.ShowDialog(DialogTypes.MainMenu);
+    public void ShowGameplayDialog() => _dialogSwitcher.ShowDialog(DialogTypes.Game);
+    public void ShowSettings() => _dialogSwitcher.ShowDialog(DialogTypes.Settings);
+    public void ShowAboutDialog() => _dialogSwitcher.ShowDialog(DialogTypes.About);
+
+    #endregion
+
     private void AddListener() {
+        SettingsDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
+        AboutDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
+
+        MainMenuDialog.SettingsDialogShowed += ShowSettings;
+        MainMenuDialog.GameplayDialogShowed += ShowGameplayDialog;
+        MainMenuDialog.AboutDialogShowed += ShowAboutDialog;
+
+        GameDialog.PlayClicked += StartGameplay;
+        GameDialog.ResetClicked += OnResetClicked;
+        GameDialog.MainMenuClicked += OnMainMenuClicked;
+
         _spawner.SheepCreated += OnSheepCreated;
-        _gameDialog.ResetClicked += OnResetClicked;
         _scoreCounter.SheepIsOver += OnSheepIsOver;
     }
 
     private void RemoveLisener() {
+        SettingsDialog.BackClicked -= _dialogSwitcher.ShowPreviousDialog;
+        AboutDialog.BackClicked -= _dialogSwitcher.ShowPreviousDialog;
+
+        MainMenuDialog.SettingsDialogShowed -= ShowSettings;
+        MainMenuDialog.GameplayDialogShowed -= ShowGameplayDialog;
+        MainMenuDialog.AboutDialogShowed -= ShowAboutDialog;
+ 
+        GameDialog.PlayClicked -= StartGameplay;
+        GameDialog.ResetClicked -= OnResetClicked;
+        GameDialog.MainMenuClicked -= OnMainMenuClicked;
+
         _spawner.SheepCreated -= OnSheepCreated;
-        _gameDialog.ResetClicked -= OnResetClicked;
         _scoreCounter.SheepIsOver -= OnSheepIsOver;
     }
 
@@ -47,7 +84,7 @@ public class GameplayMediator : IDisposable {
 
     private void OnSheepStriked() {
         _scoreCounter.AddStrike();
-        
+
         _spawner.DestroyCurrentSheep();
 
         if (_sheepOver == false)
@@ -67,13 +104,20 @@ public class GameplayMediator : IDisposable {
     }
 
     private void OnResetClicked() {
-        Debug.Log("GameplayMediator: OnResetClicked");
-
         _scoreCounter.Reset();
         _qTESystem.Reset();
         _sheepOver = false;
 
-        StartGame();
+        StartGameplay();
+    }
+
+    private void OnMainMenuClicked() {
+        _scoreCounter.Reset();
+        _qTESystem.Reset();
+        _sheepOver = false;
+
+
+        ShowMainMenuDialog();
     }
 
     public void Dispose() {

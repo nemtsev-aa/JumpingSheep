@@ -1,25 +1,35 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
 
 public class QTESystem : MonoBehaviour, IDisposable {
-    public event Action<bool> Finished;
+    public event Action Started;
+    public event Action<bool> Completed;
+    public event Action<bool> EventFinished;
 
-    [SerializeField] private TextMeshProUGUI _resultLabel;
+    [SerializeField, Range(1, 5)] private int _eventsCount = 3;
+    [SerializeField, Range(1, 5)] private int _minSuccessfulEventCount = 1;
+    [Space(10)]
     [SerializeField] private QTEEvent _qTEEventPrefab;
     [SerializeField] private QTEEventView _qTEEventViewPrefab;
     [SerializeField] private RectTransform _qTEEventViewsParent;
+    [SerializeField] private QTESoundManager _qTESoundManager;
 
-    private List<QTEEvent> _events = new List<QTEEvent>();
-    private List<QTEEventView> _eventViews = new List<QTEEventView>();
+    private readonly List<QTEEvent> _events = new List<QTEEvent>();
+    private readonly List<QTEEventView> _eventViews = new List<QTEEventView>();
+    private readonly List<QTEEventConfig> _configs = new List<QTEEventConfig>();
     private QTEEvent _currentEvent;
-    private List<QTEEventConfig> _configs = new List<QTEEventConfig>();
+    private int _successfulEventCount;
+
+    private void OnValidate() {
+        _minSuccessfulEventCount = Mathf.Clamp(_minSuccessfulEventCount, 0, _eventsCount);
+    }
 
     public void Init(List<QTEEventConfig> configs) {
         _configs.AddRange(configs);
         _qTEEventViewsParent.transform.gameObject.SetActive(false);
+        _qTESoundManager.Init(this);
     }
 
     public void StartEvents() {
@@ -31,15 +41,17 @@ public class QTESystem : MonoBehaviour, IDisposable {
         _currentEvent = _events[0];
         _currentEvent.enabled = true;
         _currentEvent.Start();
+
+        Started?.Invoke();
     }
 
     public void Reset() {
-        _resultLabel.text = "";
+        _successfulEventCount = 0;
         ClearCompanents();
     }
 
     private void CreateEvents() {
-        for (int i = 0; i < _configs.Count; i++) {
+        for (int i = 0; i < _eventsCount; i++) {
             var index = UnityEngine.Random.Range(0, _configs.Count); 
             QTEEventConfig config = _configs[index];
 
@@ -62,23 +74,33 @@ public class QTESystem : MonoBehaviour, IDisposable {
     }
 
     private void OnStateChanged(QTEEventState state) {
+        if (state == QTEEventState.Started)
+            return;
+
         if (state == QTEEventState.FailFinished) {
-            _qTEEventViewsParent.transform.gameObject.SetActive(false);
-            _resultLabel.text = "Неудача";
-            Finished?.Invoke(false);
+            EventFinished?.Invoke(false);
+            ClearEvent(_currentEvent);
         }
 
         if (state == QTEEventState.TrueFinished) {
+            _successfulEventCount++;
+            EventFinished?.Invoke(true);
             ClearEvent(_currentEvent);
-
-            if (_events.Count <= 0) {
-                _resultLabel.text = "Успех!";
-                _qTEEventViewsParent.transform.gameObject.SetActive(false);
-                Finished?.Invoke(true);
-            }
-            else
-                StartEvents();
         }
+
+        if (_events.Count > 0) {
+            StartEvents();
+            return;
+        }
+
+        SummingUpResults();  
+    }
+
+    private void SummingUpResults() {
+        _qTEEventViewsParent.transform.gameObject.SetActive(false);
+        bool executionResult = _successfulEventCount >= _minSuccessfulEventCount ? true : false;
+
+        Completed?.Invoke(executionResult);
     }
 
     private void ClearEvent(QTEEvent qTEEvent) {
