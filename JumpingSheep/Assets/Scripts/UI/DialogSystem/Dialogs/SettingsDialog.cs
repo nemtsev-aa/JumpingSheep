@@ -1,32 +1,20 @@
-using System;
-using UnityEngine;
-
 public class SettingsDialog : Dialog {
-    
+    private SheepCountPanel _sheepCount;
+    private QTECountPanel _qteCount;
+    private VolumePanel _volumePanel;
+
     public override void Init(Logger logger) {
         base.Init(logger);
-
     }
 
     public override void InitializationPanels() {
-        //_selectionColor = GetPanelByType<SelectionColorPanel>();
-        //_selectionColor.Init(_materialConfig, _companentsFactory);
+        _sheepCount = GetPanelByType<SheepCountPanel>();
+        _sheepCount.Init();
+
+        _qteCount = GetPanelByType<QTECountPanel>();
+        _qteCount.Init();
+
+        _volumePanel = GetPanelByType<VolumePanel>();
+        _volumePanel.Init();
     }
-
-    public override void AddListeners() {
-        base.AddListeners();
-
-        //_selectionColor.MaterialsColorChanged += OnMaterialsColorChanged;
-        //_selectionColor.SettingsApplyed += OnSettingsApplyed;
-    }
-
-    public override void RemoveListeners() {
-        base.RemoveListeners();
-
-        //_selectionColor.MaterialsColorChanged -= OnMaterialsColorChanged;
-        //_selectionColor.SettingsApplyed -= OnSettingsApplyed;
-    }
-
-    //private void OnMaterialsColorChanged(PolyhedrasCompanentTypes type, Color color) => ElementColorChanged?.Invoke(type, color);
-    //private void OnSettingsApplyed() => ColorSettingsChanged?.Invoke();
 }

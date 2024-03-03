@@ -15,9 +15,9 @@ public class GameDialog : Dialog {
     private InnerGlowPanel InnerGlowPanel => GetPanelByType<InnerGlowPanel>();
     public QTESystem QTESystem => _qTESystem;
 
-    public void SetDependency(SheepQuantityCounter counter, QTEEventConfigs qTEEventConfigs) {
+    public void SetDependency(SheepQuantityCounter counter, QTEEventConfigs qTEEventConfigs, MovementHandler movementHandler) {
         _counter = counter;
-        _qTESystem.Init(qTEEventConfigs.Configs);
+        _qTESystem.Init(qTEEventConfigs.Configs, movementHandler);
     }
 
     public override void AddListeners() {
@@ -60,7 +60,7 @@ public class GameDialog : Dialog {
         LearningPanel.Init();
 
         SheepQuantityPanel.Show(false);
-        SheepQuantityPanel.Init(_counter);
+        SheepQuantityPanel.SetDependency(_counter);
 
         ResultPanel.Show(false);
         ResultPanel.Init(_counter);

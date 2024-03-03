@@ -10,6 +10,7 @@ public class QTEEventView : MonoBehaviour, IDisposable {
     [SerializeField] private Image _backgroundImage;
     [SerializeField] private Image _fillerImage;
     [SerializeField] private TextMeshProUGUI _labelText;
+    [SerializeField] private Image _iconImage;
 
     private QTEEvent _qteEvent;
     private float _eventTime => _qteEvent.Config.KeyTime;
@@ -20,7 +21,8 @@ public class QTEEventView : MonoBehaviour, IDisposable {
 
     public void Init(QTEEvent qteEvent) {
         _qteEvent = qteEvent;
-        _labelText.text = _qteEvent.Config.KeyText;
+        //_labelText.text = _qteEvent.Config.KeyText;
+        _iconImage.sprite = _qteEvent.Config.KeyIcon;
 
         AddListener();
     }

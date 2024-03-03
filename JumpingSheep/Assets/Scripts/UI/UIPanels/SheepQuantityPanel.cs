@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,19 +11,35 @@ public class SheepQuantityPanel : UIPanel {
     private SheepQuantityCounter _counter;
     private int _sheepIconQuantity;
 
-    public void Init(SheepQuantityCounter counter) {
+    public void SetDependency(SheepQuantityCounter counter) {
         _counter = counter;
-        _sheepIconQuantity = counter.MaxCount;
+        _sheepIconQuantity = _counter.MaxCount;
 
-        CreateIcons();
         AddListeners();
+    }
+
+    public override void Show(bool value) {
+        base.Show(value);
+
+        if (value) {
+
+            if (_sheepIcons != null && _sheepIcons.Count == _counter.MaxCount)
+                return;
+
+            
+            ClearSheepIcons();
+            _sheepIconQuantity = _counter.MaxCount;
+            CreateIcons();
+        }
     }
 
     public override void Reset() {
         Show(false);
 
-        if (_sheepIcons != null)
+        if (_sheepIcons != null && _sheepIconQuantity == _counter.MaxCount)
             ShowSheepIcons();
+        else
+            ClearSheepIcons(); 
     }
 
     public override void AddListeners() {
@@ -50,6 +67,15 @@ public class SheepQuantityPanel : UIPanel {
 
     private void OnRemainingQuantityChanged(int value) {
         _sheepIcons[value].Show(false);
+    }
+
+    private void ClearSheepIcons() {
+        if (_sheepIcons == null)
+            return;
+
+        foreach (var iIcon in _sheepIcons) {
+            Destroy(iIcon.gameObject);
+        }
     }
 
     private void ShowSheepIcons() {

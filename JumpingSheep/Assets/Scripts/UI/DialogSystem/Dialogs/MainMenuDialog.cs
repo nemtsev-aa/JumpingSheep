@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 public class MainMenuDialog : Dialog {
     public event Action GameplayDialogShowed;
@@ -43,6 +44,6 @@ public class MainMenuDialog : Dialog {
 
     private void OnAboutDialogSelected() => AboutDialogShowed?.Invoke();
 
-    private void OnQuitButtonSelected() => Quited?.Invoke();
+    private void OnQuitButtonSelected() => Application.Quit();
 
 }

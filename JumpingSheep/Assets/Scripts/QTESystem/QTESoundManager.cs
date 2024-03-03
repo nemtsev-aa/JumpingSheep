@@ -9,6 +9,7 @@ public class QTESoundManager : SoundManager {
     public void Init(QTESystem qTESystem) {
         _qTESystem = qTESystem;
         AudioSource = GetComponent<AudioSource>();
+        AudioSource.volume = Configs.Volume;
 
         AddListener();
     }

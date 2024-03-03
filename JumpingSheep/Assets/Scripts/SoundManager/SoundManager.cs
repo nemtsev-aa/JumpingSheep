@@ -3,7 +3,9 @@ using UnityEngine;
 
 [RequireComponent(typeof(AudioSource))]
 public abstract class SoundManager : MonoBehaviour, IDisposable {
-    protected AudioSource AudioSource;
+    [SerializeField] protected SoundConfigs Configs;
+
+    protected AudioSource AudioSource; 
 
     public abstract void AddListener();
 

@@ -7,17 +7,20 @@ public class SheepQuantityCounter {
 
     public event Action SheepIsOver;
 
+    private GameplayConfig _gameplayConfig;
+
     private int _strikeCount;
     private int _jumpCount;
-
     private int _remainingQuantity;
-
-    public int MaxCount { get; private set; }
+    
+    public int MaxCount { get { return _gameplayConfig.SheepCount; } }
+    
     public string Result => $"{_jumpCount}/{MaxCount}";
+    
+    public SheepQuantityCounter(GameplayConfig gameplayConfig) {
+        _gameplayConfig = gameplayConfig;
 
-    public SheepQuantityCounter(int maxSheepCount) {
-        MaxCount = maxSheepCount;
-        _remainingQuantity = maxSheepCount;
+        _remainingQuantity = MaxCount;
     }
 
     public void AddStrike() {

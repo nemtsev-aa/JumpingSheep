@@ -14,10 +14,10 @@ public class UIManager : MonoBehaviour {
     
     public DialogSwitcher DialogSwitcher { get; private set; }
 
-    public void Init(Logger logger, SheepQuantityCounter sheepCounter, QTEEventConfigs qTEEventConfigs) {
+    public void Init(Logger logger, SheepQuantityCounter sheepCounter, QTEEventConfigs qTEEventConfigs, MovementHandler movementHandler) {
         _logger = logger;
 
-        GameDialog.SetDependency(sheepCounter, qTEEventConfigs);
+        GameDialog.SetDependency(sheepCounter, qTEEventConfigs, movementHandler);
 
         CreateDialogsDictionary();
 

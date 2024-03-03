@@ -6,15 +6,17 @@ public class GameplayMediator : IDisposable {
     private readonly SheepQuantityCounter _scoreCounter;
     private readonly UIManager _uIManager;
     private readonly DialogSwitcher _dialogSwitcher;
+    private readonly EnvironmentSoundManager _environmentSound;
 
     private readonly QTESystem _qTESystem;
     private Sheep _currentSheep;
     private bool _sheepOver;
 
-    public GameplayMediator(SheepSpawner spawner, SheepQuantityCounter scoreCounter, UIManager uIManager) {
+    public GameplayMediator(SheepSpawner spawner, SheepQuantityCounter scoreCounter, UIManager uIManager, EnvironmentSoundManager environmentSound) {
         _spawner = spawner;
         _scoreCounter = scoreCounter;
         _uIManager = uIManager;
+        _environmentSound = environmentSound;
 
         _dialogSwitcher = uIManager.DialogSwitcher;
         _qTESystem = GameDialog.QTESystem;
@@ -30,14 +32,25 @@ public class GameplayMediator : IDisposable {
     }
 
     public void StartGameplay() {
+        _scoreCounter.Reset();
+        _environmentSound.PlaySound(MusicType.Gameplay);
         _spawner.CreateSheep();
     }
 
     #region Switching Dialogs
 
-    public void ShowMainMenuDialog() => _dialogSwitcher.ShowDialog(DialogTypes.MainMenu);
-    public void ShowGameplayDialog() => _dialogSwitcher.ShowDialog(DialogTypes.Game);
+    public void ShowMainMenuDialog() {
+        _environmentSound.PlaySound(MusicType.UI);
+        _dialogSwitcher.ShowDialog(DialogTypes.MainMenu);
+    }
+
+    public void ShowGameplayDialog() {
+        _environmentSound.PlaySound(MusicType.Gameplay);
+        _dialogSwitcher.ShowDialog(DialogTypes.Game);
+    }
+
     public void ShowSettings() => _dialogSwitcher.ShowDialog(DialogTypes.Settings);
+
     public void ShowAboutDialog() => _dialogSwitcher.ShowDialog(DialogTypes.About);
 
     #endregion
@@ -101,6 +114,7 @@ public class GameplayMediator : IDisposable {
 
     private void OnSheepIsOver() {
         _sheepOver = true;
+        _environmentSound.PlaySound(MusicType.GameOver);
     }
 
     private void OnResetClicked() {

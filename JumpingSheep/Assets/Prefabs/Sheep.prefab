@@ -64,6 +64,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fd0c5bb45583494985f4085170a9c21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Configs: {fileID: 11400000, guid: 00304f30471494f46b53bb6a069049f9, type: 2}
   _config:
     <Move>k__BackingField: {fileID: 8300000, guid: c89b18f4a0da4c94cb22a8de98a8f48f,
       type: 3}

@@ -8,8 +8,8 @@ public class QTESystem : MonoBehaviour, IDisposable {
     public event Action<bool> Completed;
     public event Action<bool> EventFinished;
 
-    [SerializeField, Range(1, 5)] private int _eventsCount = 3;
-    [SerializeField, Range(1, 5)] private int _minSuccessfulEventCount = 1;
+    [SerializeField] private QTESystemConfig _systemConfig;
+
     [Space(10)]
     [SerializeField] private QTEEvent _qTEEventPrefab;
     [SerializeField] private QTEEventView _qTEEventViewPrefab;
@@ -21,15 +21,20 @@ public class QTESystem : MonoBehaviour, IDisposable {
     private readonly List<QTEEventConfig> _configs = new List<QTEEventConfig>();
     private QTEEvent _currentEvent;
     private int _successfulEventCount;
+    
 
-    private void OnValidate() {
-        _minSuccessfulEventCount = Mathf.Clamp(_minSuccessfulEventCount, 0, _eventsCount);
-    }
+    private int _minSuccessfulEventCount => _systemConfig.MinSuccessfulEventCount;
+    private int _eventsCount => _systemConfig.EventsCount;
 
-    public void Init(List<QTEEventConfig> configs) {
+    private MovementHandler _movementHandler;
+
+
+    public void Init(List<QTEEventConfig> configs, MovementHandler movementHandler) {
         _configs.AddRange(configs);
         _qTEEventViewsParent.transform.gameObject.SetActive(false);
         _qTESoundManager.Init(this);
+
+        _movementHandler = movementHandler;
     }
 
     public void StartEvents() {
@@ -61,7 +66,7 @@ public class QTESystem : MonoBehaviour, IDisposable {
 
     private void CreateEvent(QTEEventConfig config) {
         QTEEvent newEvent = Instantiate(_qTEEventPrefab, transform);
-        newEvent.Init(config);
+        newEvent.Init(config, _movementHandler);
         newEvent.enabled = false;
 
         QTEEventView eventView = Instantiate(_qTEEventViewPrefab, _qTEEventViewsParent);
