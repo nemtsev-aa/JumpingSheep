@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
+using Zenject;
 
-public class DesktopInput : MonoBehaviour, IInput {
+public class DesktopInput : ITickable, IInput {
     public event Action SwipeDown;
     public event Action SwipeUp;
     public event Action SwipeRight;
@@ -15,7 +16,7 @@ public class DesktopInput : MonoBehaviour, IInput {
     private float _deadZone = 80;
     private Vector2 _startPosition;
 
-    public void Update() {
+    public void Tick() {
 
         ProcessClickUp();
 
@@ -41,7 +42,6 @@ public class DesktopInput : MonoBehaviour, IInput {
     private void ProcessClickUp() {
         if (Input.GetMouseButtonUp(LeftMouseButton)) 
             _isSwiping = false;
-
     }
 
     private void CheckSwipe() {
@@ -56,7 +56,8 @@ public class DesktopInput : MonoBehaviour, IInput {
                 else
                     SwipeLeft?.Invoke();
             }
-            else {
+            else 
+            {
                 if (_swipeDelta.y > 0)
                     SwipeUp?.Invoke();
                 else

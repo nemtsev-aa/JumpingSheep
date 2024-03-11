@@ -15,12 +15,12 @@ public class QTEEvent : MonoBehaviour, IDisposable {
 
     public QTEEventConfig Config { get; private set; }
 
-    private MovementHandler _movementHandler;
+    private SwipeHandler _movementHandler;
     private SwipeDirection _direction;
 
     private float _eventTime => Config.KeyTime;
     
-    public void Init(QTEEventConfig config, MovementHandler movementHandler) {
+    public void Init(QTEEventConfig config, SwipeHandler movementHandler) {
         Config = config;
         _movementHandler = movementHandler;
     }

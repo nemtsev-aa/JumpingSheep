@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
+using Zenject;
 
-public class MobileInput : MonoBehaviour, IInput {
+public class MobileInput : ITickable, IInput {
     public event Action SwipeDown;
     public event Action SwipeUp;
     public event Action SwipeRight;
@@ -15,7 +16,7 @@ public class MobileInput : MonoBehaviour, IInput {
     private bool _isSwiping;
     private float _deadZone = 80;
 
-    public void Update() {
+    public void Tick() {
         if(Input.touchCount > 0) {
             Touch touch = Input.GetTouch(FirstTouch);
 

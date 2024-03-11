@@ -9,20 +9,23 @@ public class Bootstrap : MonoBehaviour {
     [SerializeField] private SheepSpawner _spawner;
     [SerializeField] private EnvironmentSoundManager _environmentSoundManager;
 
-    [SerializeField] private MovementHandler _movementHandler;
+    private SwipeHandler _swipeHandler;
 
 
     private Logger _logger;
+    private DialogFactory _dialogFactory;
+
+    public void Construct(Logger logger, DialogFactory dialogFactory, SwipeHandler swipeHandler) {
+        _logger = logger;
+        _dialogFactory = dialogFactory;
+        _swipeHandler = swipeHandler;
+    }
 
     private void Start() {
-        _logger = new Logger();
-
-        _movementHandler.Init();
-
         _spawner.Init(_factory);
         var scoreCounter = new SheepQuantityCounter(_gameplayConfig);
 
-        _uIManager.Init(_logger, scoreCounter, _qTEEventConfigs, _movementHandler);
+        _uIManager.Init(_logger, _dialogFactory);
         _environmentSoundManager.Init();
 
         var gameplayMediator = new GameplayMediator(_spawner, scoreCounter, _uIManager, _environmentSoundManager);

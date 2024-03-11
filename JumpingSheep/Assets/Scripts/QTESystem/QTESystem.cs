@@ -26,10 +26,10 @@ public class QTESystem : MonoBehaviour, IDisposable {
     private int _minSuccessfulEventCount => _systemConfig.MinSuccessfulEventCount;
     private int _eventsCount => _systemConfig.EventsCount;
 
-    private MovementHandler _movementHandler;
+    private SwipeHandler _movementHandler;
 
 
-    public void Init(List<QTEEventConfig> configs, MovementHandler movementHandler) {
+    public void Init(List<QTEEventConfig> configs, SwipeHandler movementHandler) {
         _configs.AddRange(configs);
         _qTEEventViewsParent.transform.gameObject.SetActive(false);
         _qTESoundManager.Init(this);

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Zenject;
 
 public class GameDialog : Dialog {
     public event Action PlayClicked;
@@ -15,9 +16,10 @@ public class GameDialog : Dialog {
     private InnerGlowPanel InnerGlowPanel => GetPanelByType<InnerGlowPanel>();
     public QTESystem QTESystem => _qTESystem;
 
-    public void SetDependency(SheepQuantityCounter counter, QTEEventConfigs qTEEventConfigs, MovementHandler movementHandler) {
+    [Inject]
+    public void Constuct(SheepQuantityCounter counter, QTEEventConfigs qTEEventConfigs, SwipeHandler swipeHandler) {
         _counter = counter;
-        _qTESystem.Init(qTEEventConfigs.Configs, movementHandler);
+        _qTESystem.Init(qTEEventConfigs.Configs, swipeHandler);
     }
 
     public override void AddListeners() {
