@@ -17,14 +17,20 @@ public class GameDialog : Dialog {
     public QTESystem QTESystem => _qTESystem;
 
     [Inject]
-    public void Constuct(SheepQuantityCounter counter, QTEEventConfigs qTEEventConfigs, SwipeHandler swipeHandler) {
-        _counter = counter;
+    public void Constuct(QTEEventConfigs qTEEventConfigs, SwipeHandler swipeHandler) {
         _qTESystem.Init(qTEEventConfigs.Configs, swipeHandler);
     }
 
-    public override void AddListeners() {
-        _counter.SheepIsOver += OnSheepIsOver;
+    public void SetSheepCounter(SheepQuantityCounter sheepCounter) {
+        _counter = sheepCounter;
+        
+        ResultPanel.Init(_counter);
+        SheepQuantityPanel.Init(_counter);
 
+        _counter.SheepIsOver += OnSheepIsOver;
+    }
+
+    public override void AddListeners() {
         LearningPanel.PlayClicked += OnPlayClicked;
         LearningPanel.MainMenuClicked += OnMainMenuClick;
 
@@ -62,10 +68,8 @@ public class GameDialog : Dialog {
         LearningPanel.Init();
 
         SheepQuantityPanel.Show(false);
-        SheepQuantityPanel.SetDependency(_counter);
 
         ResultPanel.Show(false);
-        ResultPanel.Init(_counter);
 
         InnerGlowPanel.Show(false);
     }

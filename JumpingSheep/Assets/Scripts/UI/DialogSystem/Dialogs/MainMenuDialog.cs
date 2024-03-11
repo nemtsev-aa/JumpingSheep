@@ -1,18 +1,25 @@
 using System;
 using UnityEngine;
+using Zenject;
 
 public class MainMenuDialog : Dialog {
-    public event Action GameplayDialogShowed;
+    public event Action LevelSelectDialogShowed;
     public event Action SettingsDialogShowed;
     public event Action AboutDialogShowed;
     public event Action Quited;
 
     private MenuCategoryPanel _category;
+    private Logger _logger;
 
-    public override void Init(Logger logger) {
-        base.Init(logger);
+    [Inject]
+    public void Construct(Logger logger) {
+        _logger = logger;
+    }
 
-        logger.Log("Начало метода [DesktopDialog : Init]");
+    public override void Init() {
+        base.Init();
+
+        _logger.Log("Начало метода [DesktopDialog : Init]");
     }
 
     public override void InitializationPanels() {
@@ -38,7 +45,7 @@ public class MainMenuDialog : Dialog {
         _category.QuitButtonSelected -= OnQuitButtonSelected;
     }
 
-    private void OnGameplayDialogSelected() => GameplayDialogShowed?.Invoke();
+    private void OnGameplayDialogSelected() => LevelSelectDialogShowed?.Invoke();
 
     private void OnSettingsDialogSelected() => SettingsDialogShowed?.Invoke();
 

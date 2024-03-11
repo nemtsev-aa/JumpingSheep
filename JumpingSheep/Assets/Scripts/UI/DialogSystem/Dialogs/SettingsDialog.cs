@@ -3,8 +3,8 @@ public class SettingsDialog : Dialog {
     private QTECountPanel _qteCount;
     private VolumePanel _volumePanel;
 
-    public override void Init(Logger logger) {
-        base.Init(logger);
+    public override void Init() {
+        base.Init();
     }
 
     public override void InitializationPanels() {

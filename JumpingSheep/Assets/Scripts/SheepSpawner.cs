@@ -6,9 +6,7 @@ public class SheepSpawner : MonoBehaviour {
 
     [SerializeField] private Transform _spawnPoint;
 
-
     private SheepFactory _factory;
-
     private Sheep _currentSheep;
 
     public void Init(SheepFactory factory) {

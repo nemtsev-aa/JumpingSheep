@@ -11,7 +11,7 @@ public class SheepQuantityPanel : UIPanel {
     private SheepQuantityCounter _counter;
     private int _sheepIconQuantity;
 
-    public void SetDependency(SheepQuantityCounter counter) {
+    public void Init(SheepQuantityCounter counter) {
         _counter = counter;
         _sheepIconQuantity = _counter.MaxCount;
 

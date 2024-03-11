@@ -18,7 +18,7 @@ public abstract class Dialog : MonoBehaviour, IDisposable {
     public bool IsInit { get; protected set; } = false;
     public IReadOnlyList<UIPanel> DialogPanels => Panels;
     
-    public virtual void Init(Logger logger) {
+    public virtual void Init() {
         if (IsInit == true)
             return;
 

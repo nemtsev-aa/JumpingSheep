@@ -2,8 +2,12 @@ using UnityEngine;
 using Zenject;
 
 public class GlobalInstaller : MonoInstaller {
+    [SerializeField] private GameplayConfig _gameplayConfig;
+    [SerializeField] private QTEEventConfigs _qTEEventConfigs;
+    [SerializeField] private SheepFactory _sheepFactory;
+
     [SerializeField] private UICompanentPrefabs _uiCompanentPrefabs;
-    //[SerializeField] private ModsConfig _modsConfig;
+    [SerializeField] private LevelConfigs _levelConfig;
     //[SerializeField] private DifficultyLevelsConfig _difficultyLevelsConfig;
     //[SerializeField] private QuestionsConfig _questionsConfig;
     //[SerializeField] private DrawingsConfig _drawingsConfig;
@@ -12,7 +16,7 @@ public class GlobalInstaller : MonoInstaller {
     //[SerializeField] private Pointer _pointerPrefab;
 
     public override void InstallBindings() {
-        //BuildModsConfig();
+        BindConfigs();
         BindUICompanentsConfig();
 
         //BindPointer();
@@ -20,14 +24,20 @@ public class GlobalInstaller : MonoInstaller {
         BindFactories();
         //BindTimeCounter();
         BindInput();
+        BindLogger();
     }
 
-    //private void BuildModsConfig() {
-    //    if (_modsConfig.Configs.Count == 0)
-    //        Debug.LogError($"List of ModsConfig is empty");
+    private void BindConfigs() {
+        if (_levelConfig.Configs.Count == 0)
+            Debug.LogError($"List of LevelConfig is empty");
 
-    //    Container.Bind<ModsConfig>().FromInstance(_modsConfig).AsSingle();
-    //}
+        Container.Bind<LevelConfigs>().FromInstance(_levelConfig).AsSingle();
+
+        if (_qTEEventConfigs.Configs.Count == 0)
+            Debug.LogError($"List of QTEEventConfigs is empty");
+
+        Container.Bind<QTEEventConfigs>().FromInstance(_qTEEventConfigs).AsSingle();
+    }
 
     private void BindUICompanentsConfig() {
         if (_uiCompanentPrefabs.Prefabs.Count == 0)
@@ -37,6 +47,7 @@ public class GlobalInstaller : MonoInstaller {
     }
 
     private void BindFactories() {
+        Container.Bind<SheepFactory>().FromInstance(_sheepFactory).AsSingle();
         Container.Bind<DialogFactory>().AsSingle();
         Container.Bind<UICompanentsFactory>().AsSingle();
     }
@@ -68,5 +79,10 @@ public class GlobalInstaller : MonoInstaller {
         }
             
         Container.Bind<SwipeHandler>().FromInstance(swipeHandler).AsSingle().NonLazy(); 
+    }
+
+    private void BindLogger() {
+        Logger logger = new Logger();
+        Container.Bind<Logger>().FromInstance(logger).AsSingle().NonLazy();
     }
 }

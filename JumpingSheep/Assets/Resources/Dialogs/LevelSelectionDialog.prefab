@@ -405,6 +405,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d8138aa467d06a4e8a4a5392bb8b840, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _levelSelectionViewParent: {fileID: 6711248943912310068}
 --- !u!1 &6711248943912310071
 GameObject:
   m_ObjectHideFlags: 0
@@ -603,7 +604,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &9148303491706998470
 RectTransform:
   m_ObjectHideFlags: 0
@@ -611,7 +612,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9148303491706998469}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -622,7 +623,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -50}
+  m_AnchoredPosition: {x: 0, y: -49.999985}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &9148303491706998471
@@ -637,9 +638,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b4ef63470354fe479ead42a718d9acb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BackButton: {fileID: 0}
+  BackButton: {fileID: 9148303490443154604}
   SettingsButton: {fileID: 0}
-  Panels: []
+  Panels:
+  - {fileID: 6711248943566854644}
 --- !u!1 &9148303491809381501
 GameObject:
   m_ObjectHideFlags: 0

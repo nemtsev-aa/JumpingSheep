@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class UIManager : MonoBehaviour {
-    private Logger _logger;
     private DialogFactory _factory;
 
     private Dictionary<DialogTypes, Dialog> _dialogsDictionary;
@@ -17,9 +15,10 @@ public class UIManager : MonoBehaviour {
     
     public DialogSwitcher DialogSwitcher { get; private set; }
 
-    public void Init(Logger logger, DialogFactory factory) {
-        _logger = logger;
+    public void Init(DialogFactory factory) {
         _factory = factory;
+
+        _factory.SetDialogsParent(this.GetComponent<RectTransform>());
 
         CreateDialogsDictionary();
 
@@ -49,7 +48,7 @@ public class UIManager : MonoBehaviour {
             };
 
         foreach (var iDialog in _dialogsDictionary.Values) {
-            iDialog.Init(_logger);
+            iDialog.Init();
             iDialog.Show(false);
         }
     }

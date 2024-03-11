@@ -9,8 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6cfce640408f0c64f8b4fdc1fb973db8, type: 3}
-  m_Name: UICompanentPrefabs
+  m_Script: {fileID: 11500000, guid: fd61ded9685f2da4d868042758ec9f34, type: 3}
+  m_Name: LevelStatusViewConfigs
   m_EditorClassIdentifier: 
-  <Prefabs>k__BackingField:
-  - {fileID: 2197225470484831325, guid: cc9ad045da66c7b42badd32e018b3a8d, type: 3}
