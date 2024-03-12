@@ -1,81 +1,89 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+using Zenject;
 
-
-public class QTESystem : MonoBehaviour, IDisposable {
+public class QTESystem : IPause, ITickable, IDisposable {
     public event Action Started;
-    public event Action<bool> Completed;
+    public event Action<bool> AllEventsCompleted;
     public event Action<bool> EventFinished;
 
-    [SerializeField] private QTESystemConfig _systemConfig;
+    private PauseHandler _pauseHandler;
+    private readonly QTESoundManager _qTESoundManager;
+    private readonly SwipeHandler _swipeHandler;
 
-    [Space(10)]
-    [SerializeField] private QTEEvent _qTEEventPrefab;
-    [SerializeField] private QTEEventView _qTEEventViewPrefab;
-    [SerializeField] private RectTransform _qTEEventViewsParent;
-    [SerializeField] private QTESoundManager _qTESoundManager;
+    private List<QTEEvent> _events;
+    private readonly List<QTEEventConfig> _eventConfigs;
+    private LevelConfig _levelConfig;
 
-    private readonly List<QTEEvent> _events = new List<QTEEvent>();
-    private readonly List<QTEEventView> _eventViews = new List<QTEEventView>();
-    private readonly List<QTEEventConfig> _configs = new List<QTEEventConfig>();
     private QTEEvent _currentEvent;
     private int _successfulEventCount;
-    
+    private bool _isPaused;
 
-    private int _minSuccessfulEventCount => _systemConfig.MinSuccessfulEventCount;
-    private int _eventsCount => _systemConfig.EventsCount;
+    public QTESystem(PauseHandler pauseHandler, QTEEventConfigs configs, QTESoundManager qTESoundManager, SwipeHandler swipeHandler) {
+        _pauseHandler = pauseHandler;
+        _pauseHandler.Add(this);
 
-    private SwipeHandler _movementHandler;
-
-
-    public void Init(List<QTEEventConfig> configs, SwipeHandler movementHandler) {
-        _configs.AddRange(configs);
-        _qTEEventViewsParent.transform.gameObject.SetActive(false);
+        _eventConfigs = new List<QTEEventConfig>();
+        _eventConfigs.AddRange(configs.Configs);
+        
+        _qTESoundManager = qTESoundManager;
         _qTESoundManager.Init(this);
 
-        _movementHandler = movementHandler;
+        _swipeHandler = swipeHandler;
+    }
+
+    public IReadOnlyList<QTEEvent> Events => _events;
+    private int MinSuccessfulEventCount => _levelConfig.QTEConfig.MinSuccessfulEventCount;
+    private int EventsCount => _levelConfig.QTEConfig.EventsCount;
+
+    public void SetLevelConfig(LevelConfig config) {
+        _levelConfig = config;
+
+        CreateEvents();
     }
 
     public void StartEvents() {
-        if (_events.Count == 0) {
-            _qTEEventViewsParent.transform.gameObject.SetActive(true);
+        if (_events.Count == 0) 
             CreateEvents();
-        }
 
         _currentEvent = _events[0];
-        _currentEvent.enabled = true;
         _currentEvent.Start();
 
         Started?.Invoke();
     }
 
+    public void Tick() {
+        if (_currentEvent != null && _isPaused == false)
+            _currentEvent.Update();
+    }
+
+    public void SetPause(bool isPaused) => _isPaused = isPaused;
+
     public void Reset() {
         _successfulEventCount = 0;
+        _levelConfig = null;
+
         ClearCompanents();
     }
 
     private void CreateEvents() {
-        for (int i = 0; i < _eventsCount; i++) {
-            var index = UnityEngine.Random.Range(0, _configs.Count); 
-            QTEEventConfig config = _configs[index];
+        _events = new List<QTEEvent>();
+
+        for (int i = 0; i < EventsCount; i++) {
+            var index = UnityEngine.Random.Range(0, _eventConfigs.Count); 
+            QTEEventConfig config = _eventConfigs[index];
 
             CreateEvent(config);
         }
     }
 
     private void CreateEvent(QTEEventConfig config) {
-        QTEEvent newEvent = Instantiate(_qTEEventPrefab, transform);
-        newEvent.Init(config, _movementHandler);
-        newEvent.enabled = false;
-
-        QTEEventView eventView = Instantiate(_qTEEventViewPrefab, _qTEEventViewsParent);
-        eventView.Init(newEvent);
-
+        QTEEvent newEvent = new QTEEvent(_swipeHandler);
+       
+        newEvent.Init(config);
         newEvent.StateChanged += OnStateChanged;
-
+        
         _events.Add(newEvent);
-        _eventViews.Add(eventView);
     }
 
     private void OnStateChanged(QTEEventState state) {
@@ -102,37 +110,31 @@ public class QTESystem : MonoBehaviour, IDisposable {
     }
 
     private void SummingUpResults() {
-        _qTEEventViewsParent.transform.gameObject.SetActive(false);
-        bool executionResult = _successfulEventCount >= _minSuccessfulEventCount ? true : false;
+        bool executionResult = _successfulEventCount >= MinSuccessfulEventCount;
 
-        Completed?.Invoke(executionResult);
+        AllEventsCompleted?.Invoke(executionResult);
     }
 
     private void ClearEvent(QTEEvent qTEEvent) {
         qTEEvent.StateChanged -= OnStateChanged;
         
         _events.Remove(qTEEvent);
-        Destroy(qTEEvent.gameObject);
+        qTEEvent = null;
     }
 
     private void ClearCompanents() {
         if (_events.Count >= 0) {
             foreach (var iEvent in _events) {
                 iEvent.StateChanged -= OnStateChanged;
-                Destroy(iEvent.gameObject);
             }
 
             _events.Clear();
         }
-
-        foreach (var iView in _eventViews) {
-            Destroy(iView.gameObject);
-        }
-
-        _eventViews.Clear();
     }
 
     public void Dispose() {
         ClearCompanents();
+        _pauseHandler.Remove(this);
     }
+
 }

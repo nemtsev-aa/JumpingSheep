@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Sheep : MonoBehaviour {
+public class Sheep : MonoBehaviour, IPause {
     private const string IsMove = "IsMove";
     private const string IsJump = "IsJump";
     private const string IsStrike = "IsStrike";
@@ -20,6 +20,7 @@ public class Sheep : MonoBehaviour {
 
     private bool _QTEActive = false;
     private bool _qTEResult = false;
+    private bool _isPaused;
 
     public AnimatorEventsHandler EventsHandler { get; private set; }
 
@@ -32,14 +33,18 @@ public class Sheep : MonoBehaviour {
         _soundManager.Init(this);
 
         _qTESystem = qTESystem;
-        _qTESystem.Completed += OnQTESystemFinished;
+        _qTESystem.AllEventsCompleted += OnQTESystemAllEventsCompleted;
 
         _animator.SetBool(IsMove, true);
         _currentSpeed = _moveSpeed;
     }
 
+    public void SetPause(bool isPaused) => _isPaused = isPaused;
 
     private void Update() {
+        if (_isPaused)
+            return;
+
         if (_isTrigger == true && _QTEActive == false) {
             _qTESystem.StartEvents();
             _QTEActive = true;
@@ -53,12 +58,14 @@ public class Sheep : MonoBehaviour {
             else
                 _animator.SetBool(IsStrike, true);
 
-            _qTESystem.Reset();
             _qTESystem = null;
         }
     }
 
     private void FixedUpdate() {
+        if (_isPaused)
+            return;
+
         if (_isMoved == true) {
             _rigidbody.AddForce(_currentSpeed, 0, 0, ForceMode.VelocityChange);
             _rigidbody.AddForce(-_rigidbody.velocity.x * _friction, 0, 0, ForceMode.VelocityChange);
@@ -79,7 +86,7 @@ public class Sheep : MonoBehaviour {
         }
     }
 
-    private void OnQTESystemFinished(bool qTEResult) {
+    private void OnQTESystemAllEventsCompleted(bool qTEResult) {
         _qTEResult = qTEResult;
         _currentSpeed = _moveSpeed;
     }

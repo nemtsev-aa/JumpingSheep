@@ -9,9 +9,10 @@ public enum SwipeDirection {
     Left
 }
 
-public class SwipeHandler: IDisposable {
+public class SwipeHandler: IPause, IDisposable {
     public event Action<SwipeDirection> SwipeDirectionChanged;
-    private IInput _input;
+    private readonly IInput _input;
+    private bool _isPaused;
 
     public SwipeHandler(IInput input) {
         _input = input;
@@ -21,6 +22,8 @@ public class SwipeHandler: IDisposable {
         _input.SwipeLeft += OnSwipeLeft;
         _input.SwipeRight += OnSwipeRight;
     }
+
+    public void SetPause(bool isPaused) => _isPaused = isPaused;
 
     public void Dispose() {
         _input.SwipeUp -= OnSwipeUp;

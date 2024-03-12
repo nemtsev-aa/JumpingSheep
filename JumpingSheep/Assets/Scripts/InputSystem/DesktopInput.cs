@@ -3,6 +3,8 @@ using UnityEngine;
 using Zenject;
 
 public class DesktopInput : ITickable, IInput {
+    private const float DeadZone = 80;
+    
     public event Action SwipeDown;
     public event Action SwipeUp;
     public event Action SwipeRight;
@@ -13,7 +15,6 @@ public class DesktopInput : ITickable, IInput {
     private bool _isSwiping;
 
     private Vector2 _swipeDelta;
-    private float _deadZone = 80;
     private Vector2 _startPosition;
 
     public void Tick() {
@@ -49,7 +50,7 @@ public class DesktopInput : ITickable, IInput {
 
         _swipeDelta = (Vector2)Input.mousePosition - (Vector2)_startPosition;
 
-        if (_swipeDelta.magnitude > _deadZone) {
+        if (_swipeDelta.magnitude > DeadZone) {
             if (Mathf.Abs(_swipeDelta.x) > Mathf.Abs(_swipeDelta.y)) {
                 if (_swipeDelta.x > 0)
                     SwipeRight?.Invoke();

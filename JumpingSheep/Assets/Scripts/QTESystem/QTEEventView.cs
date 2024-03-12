@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 
-public class QTEEventView : MonoBehaviour, IDisposable {
+public class QTEEventView : UICompanent, IDisposable {
     private const int LoopCount = 7;
 
     [SerializeField] private Image _backgroundImage;
@@ -13,7 +13,7 @@ public class QTEEventView : MonoBehaviour, IDisposable {
     [SerializeField] private Image _iconImage;
 
     private QTEEvent _qteEvent;
-    private float _eventTime => _qteEvent.Config.KeyTime;
+    private float EventTime => _qteEvent.Config.TimeToSwipe;
     private float _time;
 
     private Sequence _sequence;
@@ -21,18 +21,18 @@ public class QTEEventView : MonoBehaviour, IDisposable {
 
     public void Init(QTEEvent qteEvent) {
         _qteEvent = qteEvent;
-        //_labelText.text = _qteEvent.Config.KeyText;
-        _iconImage.sprite = _qteEvent.Config.KeyIcon;
+
+        _iconImage.sprite = _qteEvent.Config.SwipeDirectionIcon;
 
         AddListener();
     }
 
     private void Update() {
-        if (_qteEvent != null && _qteEvent.enabled == true) {
+        if (_qteEvent != null && _qteEvent.CurrentState == QTEEventState.Started) {
             _time += Time.deltaTime;
 
-            if (_time <= _eventTime)
-                _fillerImage.fillAmount = (_eventTime - _time) / _eventTime;
+            if (_time <= EventTime)
+                _fillerImage.fillAmount = (EventTime - _time) / EventTime;
         }
     }
 
@@ -90,7 +90,8 @@ public class QTEEventView : MonoBehaviour, IDisposable {
         _qteEvent = null;
     }
 
-    public void Dispose() {
+    public override void Dispose() {
+        base.Dispose();
         RemoveLisener();
     }
 }

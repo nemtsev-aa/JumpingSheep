@@ -23,7 +23,7 @@ public abstract class UIPanel : MonoBehaviour, IDisposable {
 
     }
 
-    public void Dispose() {
+    public virtual void Dispose() {
         RemoveListeners();
     }
 }

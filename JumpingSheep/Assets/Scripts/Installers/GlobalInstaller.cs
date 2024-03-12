@@ -2,12 +2,15 @@ using UnityEngine;
 using Zenject;
 
 public class GlobalInstaller : MonoInstaller {
+    [SerializeField] private Transform _spawnPoint;
     [SerializeField] private GameplayConfig _gameplayConfig;
+
     [SerializeField] private QTEEventConfigs _qTEEventConfigs;
-    [SerializeField] private SheepFactory _sheepFactory;
+    [SerializeField] private QTESoundManager _qTESoundManager;
 
     [SerializeField] private UICompanentPrefabs _uiCompanentPrefabs;
     [SerializeField] private LevelConfigs _levelConfig;
+    
     //[SerializeField] private DifficultyLevelsConfig _difficultyLevelsConfig;
     //[SerializeField] private QuestionsConfig _questionsConfig;
     //[SerializeField] private DrawingsConfig _drawingsConfig;
@@ -16,6 +19,7 @@ public class GlobalInstaller : MonoInstaller {
     //[SerializeField] private Pointer _pointerPrefab;
 
     public override void InstallBindings() {
+        BindPauseHandler();
         BindConfigs();
         BindUICompanentsConfig();
 
@@ -23,8 +27,14 @@ public class GlobalInstaller : MonoInstaller {
 
         BindFactories();
         //BindTimeCounter();
+        BindSheepSpawner();
         BindInput();
         BindLogger();
+        BindQTESystemCompanents();
+    }
+
+    public void BindPauseHandler() {
+        Container.BindInterfacesAndSelfTo<PauseHandler>().AsSingle();
     }
 
     private void BindConfigs() {
@@ -32,11 +42,6 @@ public class GlobalInstaller : MonoInstaller {
             Debug.LogError($"List of LevelConfig is empty");
 
         Container.Bind<LevelConfigs>().FromInstance(_levelConfig).AsSingle();
-
-        if (_qTEEventConfigs.Configs.Count == 0)
-            Debug.LogError($"List of QTEEventConfigs is empty");
-
-        Container.Bind<QTEEventConfigs>().FromInstance(_qTEEventConfigs).AsSingle();
     }
 
     private void BindUICompanentsConfig() {
@@ -47,42 +52,42 @@ public class GlobalInstaller : MonoInstaller {
     }
 
     private void BindFactories() {
-        Container.Bind<SheepFactory>().FromInstance(_sheepFactory).AsSingle();
+        Container.Bind<SheepFactory>().AsSingle();
         Container.Bind<DialogFactory>().AsSingle();
         Container.Bind<UICompanentsFactory>().AsSingle();
     }
 
-    //private void BindTimeCounter() {
-    //    TimeCounter timeCounter = new TimeCounter();
-
-    //    Container.BindInstance(timeCounter).AsSingle();
-    //    Container.BindInterfacesAndSelfTo<ITickable>().FromInstance(timeCounter).AsSingle();
-    //}
-
-    //private void BindPointer() {
-    //    Pointer pointer = Container.InstantiatePrefabForComponent<Pointer>(_pointerPrefab);
-    //    Container.Bind<Pointer>().FromInstance(pointer).AsSingle();
-    //}
-
-
     private void BindInput() {
-        SwipeHandler swipeHandler;
+        if (SystemInfo.deviceType == DeviceType.Handheld)
+            Container.BindInterfacesAndSelfTo<MobileInput>().AsSingle();
+        else
+            Container.BindInterfacesAndSelfTo<DesktopInput>().AsSingle();
 
-        if (SystemInfo.deviceType == DeviceType.Handheld) {
-            MobileInput input = new MobileInput();
-            swipeHandler = new SwipeHandler(input);
-        }
-        else 
-        {
-            DesktopInput input = new DesktopInput();
-            swipeHandler = new SwipeHandler(input);
-        }
-            
-        Container.Bind<SwipeHandler>().FromInstance(swipeHandler).AsSingle().NonLazy(); 
+        Container.Bind<SwipeHandler>().AsSingle().NonLazy();
     }
 
     private void BindLogger() {
         Logger logger = new Logger();
         Container.Bind<Logger>().FromInstance(logger).AsSingle().NonLazy();
     }
+
+    private void BindSheepSpawner() {
+        Transform spawnPoint = Container.InstantiatePrefabForComponent<Transform>(_spawnPoint);
+        Container.Bind<Transform>().FromInstance(spawnPoint).AsSingle();
+
+        Container.Bind<SheepSpawner>().AsSingle();
+    }
+
+    private void BindQTESystemCompanents() {
+        if (_qTEEventConfigs.Configs.Count == 0)
+            Debug.LogError($"List of QTEEventConfigs is empty");
+
+        Container.Bind<QTEEventConfigs>().FromInstance(_qTEEventConfigs).AsSingle();
+        Container.BindInterfacesAndSelfTo<QTESystem>().AsSingle(); 
+
+        QTESoundManager qTESoundManager = Container.InstantiatePrefabForComponent<QTESoundManager>(_qTESoundManager);
+        Container.Bind<QTESoundManager>().FromInstance(qTESoundManager).AsSingle();   
+    }
+
+
 }

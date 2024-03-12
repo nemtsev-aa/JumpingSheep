@@ -74,9 +74,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 207b6fd8d5f180d4189ae900be3eac36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _spawnPoint: {fileID: 4489504862362178584, guid: e7c07f2e1332c5b48a64d933119c4b72,
+    type: 3}
   _gameplayConfig: {fileID: 11400000, guid: 22b9939b6de6298459debbc2a1add8bd, type: 2}
   _qTEEventConfigs: {fileID: 11400000, guid: 4ecae17adbfadbb43b84c5dc265150f8, type: 2}
-  _factory: {fileID: 11400000, guid: bb36799bc46b47747821188828ed3e40, type: 2}
+  _qTESoundManager: {fileID: 5819492873292857247, guid: 2402f49df514fc347843a1d999a8282f,
+    type: 3}
   _uiCompanentPrefabs: {fileID: 11400000, guid: e64b8fe4668ccfc498e684cc29bcce71,
     type: 2}
   _levelConfig: {fileID: 11400000, guid: 7b693702e261fc1469432e3b04121afe, type: 2}

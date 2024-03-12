@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 
 public class UICompanentVisitor : ICompanentVisitor {
-    private List<UICompanent> _companents = new List<UICompanent>();
+    private readonly List<UICompanent> _companents;
 
     public UICompanentVisitor(List<UICompanent> companents) {
-        _companents = companents;
+        _companents = new List<UICompanent>();
+        _companents.AddRange(companents);
     }
 
     public UICompanent Companent { get; private set; }
@@ -15,4 +16,6 @@ public class UICompanentVisitor : ICompanentVisitor {
     public void Visit(LevelStatusViewConfig levelStatusConfig)
         => Companent = _companents.FirstOrDefault(companent => companent is LevelStatusView);
 
+    public void Visit(QTEEventViewConfig eventViewConfig) 
+        => Companent = _companents.FirstOrDefault(companent => companent is QTEEventView);
 }

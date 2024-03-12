@@ -16,12 +16,12 @@ public class QTESoundManager : SoundManager {
 
     public override void AddListener() {
         _qTESystem.EventFinished += OnQTESystemEventFinished;
-        _qTESystem.Completed += OnQTESystemCompleted;
+        _qTESystem.AllEventsCompleted += OnQTESystemAllEventsCompleted;
     }
 
     public override void RemoveLisener() {
         _qTESystem.EventFinished -= OnQTESystemEventFinished;
-        _qTESystem.Completed -= OnQTESystemCompleted;
+        _qTESystem.AllEventsCompleted -= OnQTESystemAllEventsCompleted;
     }
 
     private void OnQTESystemEventFinished(bool result) {
@@ -31,7 +31,7 @@ public class QTESoundManager : SoundManager {
             PlayFailEventClip();
     }
 
-    private void OnQTESystemCompleted(bool result) {
+    private void OnQTESystemAllEventsCompleted(bool result) {
         if (result)
             PlayCompleteSuccessClip();
         else

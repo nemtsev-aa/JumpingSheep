@@ -6,7 +6,6 @@ public class MainMenuDialog : Dialog {
     public event Action LevelSelectDialogShowed;
     public event Action SettingsDialogShowed;
     public event Action AboutDialogShowed;
-    public event Action Quited;
 
     private MenuCategoryPanel _category;
     private Logger _logger;

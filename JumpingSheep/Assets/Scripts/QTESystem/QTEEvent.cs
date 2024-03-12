@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Zenject;
 
 public enum QTEEventState {
     Started,
@@ -7,52 +8,56 @@ public enum QTEEventState {
     FailFinished
 }
 
-public class QTEEvent : MonoBehaviour, IDisposable {
+public class QTEEvent : IDisposable {
     public event Action<QTEEventState> StateChanged;
 
-    private QTEEventState _currentState;
     private float _time;
-
-    public QTEEventConfig Config { get; private set; }
-
-    private SwipeHandler _movementHandler;
     private SwipeDirection _direction;
+    private readonly SwipeHandler _swipeHandler;
 
-    private float _eventTime => Config.KeyTime;
+    public QTEEvent(SwipeHandler swipeHandler) {
+        _swipeHandler = swipeHandler;
+    }
+    ~QTEEvent() {
+        Debug.Log("QTEEvent: Destructor was called");
+    }
+
+    public QTEEventState CurrentState { get; private set; }
+    public QTEEventConfig Config { get; private set; }
+    private float EventTime => Config.TimeToSwipe;
     
-    public void Init(QTEEventConfig config, SwipeHandler movementHandler) {
+    public void Init(QTEEventConfig config) {
         Config = config;
-        _movementHandler = movementHandler;
     }
 
     public void Start() {
-        _currentState = QTEEventState.Started;
+        CurrentState = QTEEventState.Started;
 
         AddListener();
-        StateChanged?.Invoke(_currentState);
+        StateChanged?.Invoke(CurrentState);
     }
 
-    private void Update() {
+    public void Update() {
         _time += Time.deltaTime;
 
-        if (_time >= _eventTime) {
+        if (_time >= EventTime) {
             _time = 0f;
             StateChanged?.Invoke(QTEEventState.FailFinished);
             return;
         }
 
-        if (Input.GetKeyDown(Config.KeyKode) || _direction == Config.SwipeDirection) {
+        if (_direction == Config.SwipeDirectionValue) {
             StateChanged?.Invoke(QTEEventState.TrueFinished);
             return;
         }
     }
 
     private void AddListener() {
-        _movementHandler.SwipeDirectionChanged += OnSwipeDirectionChanged;
+        _swipeHandler.SwipeDirectionChanged += OnSwipeDirectionChanged;
     }
 
     private void RemoveLisener() {
-        _movementHandler.SwipeDirectionChanged -= OnSwipeDirectionChanged;
+        _swipeHandler.SwipeDirectionChanged -= OnSwipeDirectionChanged;
     }
 
     private void OnSwipeDirectionChanged(SwipeDirection direction) {
@@ -61,9 +66,5 @@ public class QTEEvent : MonoBehaviour, IDisposable {
 
     public void Dispose() {
         RemoveLisener();
-    }
-
-    internal void Init(QTEEventConfig config, object movementHandler) {
-        throw new NotImplementedException();
     }
 }

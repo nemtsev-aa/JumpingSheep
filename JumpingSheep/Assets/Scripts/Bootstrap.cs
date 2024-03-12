@@ -2,29 +2,28 @@ using UnityEngine;
 using Zenject;
 
 public class Bootstrap : MonoBehaviour {
-    
+    [SerializeField] private GameplayMediator _gameplayMediator;
     [SerializeField] private UIManager _uIManager;
     [SerializeField] private SheepSpawner _spawner;
     [SerializeField] private EnvironmentSoundManager _environmentSoundManager;
 
+    private PauseHandler _pauseHandler;
     private DialogFactory _dialogFactory;
-    private SheepFactory _sheepFactory;
+    private SheepSpawner _sheepSpawner;
+    private QTESystem _qTESystem;
 
     [Inject]
-    public void Construct(DialogFactory dialogFactory, SheepFactory sheepFactory) {
+    public void Construct(PauseHandler pauseHandler, DialogFactory dialogFactory, SheepSpawner sheepSpawner, QTESystem qTESystem) {
         _dialogFactory = dialogFactory;
-        _sheepFactory = sheepFactory;
+        _sheepSpawner = sheepSpawner;
+        _qTESystem = qTESystem;
+        _pauseHandler = pauseHandler;
     }
 
     private void Start() {
-        _spawner.Init(_sheepFactory);
-       
         _uIManager.Init(_dialogFactory);
         _environmentSoundManager.Init();
 
-        var gameplayMediator = new GameplayMediator(_spawner, _uIManager, _environmentSoundManager);
-        gameplayMediator.Init();
-
-        
+        _gameplayMediator.Init(_pauseHandler, _sheepSpawner, _qTESystem, _uIManager, _environmentSoundManager);
     }
 }

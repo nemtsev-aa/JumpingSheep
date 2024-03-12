@@ -1,71 +1,69 @@
 using System;
 using UnityEngine;
 
-public class GameplayMediator : IDisposable {
-    private readonly SheepSpawner _spawner;
+public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
+    private PauseHandler _pauseHandler;
+    private SheepSpawner _spawner;
     private SheepQuantityCounter _sheepCounter;
-    private readonly UIManager _uIManager;
-    private readonly DialogSwitcher _dialogSwitcher;
-    private readonly EnvironmentSoundManager _environmentSound;
+    private UIManager _uIManager;
+    private DialogSwitcher _dialogSwitcher;
+    private EnvironmentSoundManager _environmentSound;
 
-    private readonly QTESystem _qTESystem;
+    private LevelConfig _currentLevelConfig;
+    private QTESystem _qTESystem;
     private Sheep _currentSheep;
     private bool _sheepOver;
-
-    public GameplayMediator(SheepSpawner spawner, UIManager uIManager, EnvironmentSoundManager environmentSound) {
-        _spawner = spawner;
-
-        _sheepCounter = new SheepQuantityCounter();
-
-        _uIManager = uIManager;
-        _environmentSound = environmentSound;
-
-        _dialogSwitcher = uIManager.DialogSwitcher;
-        _qTESystem = GameDialog.QTESystem;
-    }
+    private bool _isPaused;
 
     private MainMenuDialog MainMenuDialog => _uIManager.MainMenuDialog;
     private LevelSelectionDialog LevelSelectionDialog => _uIManager.LevelSelectionDialog;
     private GameDialog GameDialog => _uIManager.GameDialog;
     private SettingsDialog SettingsDialog => _uIManager.SettingsDialog;
     private AboutDialog AboutDialog => _uIManager.AboutDialog;
+    
+    public void Init(PauseHandler pauseHandler, SheepSpawner spawner, QTESystem qTESystem, UIManager uIManager, EnvironmentSoundManager environmentSound) {
+        _pauseHandler = pauseHandler;
+        _spawner = spawner;
+        _qTESystem = qTESystem;
 
-    public void Init() {
+        _uIManager = uIManager;
+        _environmentSound = environmentSound;
+
+        _sheepCounter = new SheepQuantityCounter();
+        _dialogSwitcher = uIManager.DialogSwitcher;
+
         AddListener();
-
         ShowMainMenuDialog();
     }
 
-    public void StartGameplay() {
-        _sheepCounter.Reset();
-        _environmentSound.PlaySound(MusicType.Gameplay);
-        _spawner.CreateSheep();
+    public void SetPause(bool isPaused) {
+        _pauseHandler.SetPause(isPaused);
+        _currentSheep.SetPause(isPaused);
     }
 
     #region Switching Dialogs
 
-    public void ShowMainMenuDialog() {
+    private void ShowMainMenuDialog() {
         _environmentSound.PlaySound(MusicType.UI);
         _dialogSwitcher.ShowDialog(DialogTypes.MainMenu);
     }
 
-    public void ShowGameplayDialog(LevelConfig config) {
-        _sheepCounter.SetMaxCount(config.SheepCount);
-        
-        GameDialog.SetSheepCounter(_sheepCounter);
+    private void ShowGameplayDialog() {
+        GameDialog.GetPanelByType<LearningPanel>().Show(false);
 
         _environmentSound.PlaySound(MusicType.Gameplay);
         _dialogSwitcher.ShowDialog(DialogTypes.Game);
     }
 
-    public void ShowSettings() => _dialogSwitcher.ShowDialog(DialogTypes.Settings);
+    private void ShowSettings() => _dialogSwitcher.ShowDialog(DialogTypes.Settings);
 
-    public void ShowAboutDialog() => _dialogSwitcher.ShowDialog(DialogTypes.About);
+    private void ShowAboutDialog() => _dialogSwitcher.ShowDialog(DialogTypes.About);
 
-    public void ShowLevelSelectionDialog() => _dialogSwitcher.ShowDialog(DialogTypes.LevelSelection);
+    private void ShowLevelSelectionDialog() => _dialogSwitcher.ShowDialog(DialogTypes.LevelSelection);
 
     #endregion
 
+    #region Dialogs Events
     private void AddListener() {
         SettingsDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
         AboutDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
@@ -74,11 +72,14 @@ public class GameplayMediator : IDisposable {
         MainMenuDialog.LevelSelectDialogShowed += ShowLevelSelectionDialog;
         MainMenuDialog.AboutDialogShowed += ShowAboutDialog;
 
-        LevelSelectionDialog.LevelStarted += ShowGameplayDialog;
+        LevelSelectionDialog.LevelStarted += OnLevelStarted;
 
         GameDialog.PlayClicked += StartGameplay;
         GameDialog.ResetClicked += OnResetClicked;
         GameDialog.MainMenuClicked += OnMainMenuClicked;
+        GameDialog.PauseClicked += OnPauseClicked;
+        GameDialog.LearningClicked += OnLearningClicked;
+        GameDialog.SettingsClicked -= OnSettingsClicked;
 
         _spawner.SheepCreated += OnSheepCreated;
         _sheepCounter.SheepIsOver += OnSheepIsOver;
@@ -92,16 +93,23 @@ public class GameplayMediator : IDisposable {
         MainMenuDialog.LevelSelectDialogShowed -= ShowLevelSelectionDialog;
         MainMenuDialog.AboutDialogShowed -= ShowAboutDialog;
 
-        LevelSelectionDialog.LevelStarted -= ShowGameplayDialog;
+        LevelSelectionDialog.LevelStarted -= OnLevelStarted;
 
         GameDialog.PlayClicked -= StartGameplay;
         GameDialog.ResetClicked -= OnResetClicked;
         GameDialog.MainMenuClicked -= OnMainMenuClicked;
+        GameDialog.PauseClicked -= OnPauseClicked;
+        GameDialog.LearningClicked -= OnLearningClicked;
+        GameDialog.SettingsClicked -= OnSettingsClicked;
 
         _spawner.SheepCreated -= OnSheepCreated;
         _sheepCounter.SheepIsOver -= OnSheepIsOver;
+
     }
 
+    #endregion
+
+    #region Sheeps Events
 
     private void OnSheepCreated(Sheep sheep) {
         _currentSheep = sheep;
@@ -114,18 +122,23 @@ public class GameplayMediator : IDisposable {
     private void OnSheepStriked() {
         _sheepCounter.AddStrike();
 
-        _spawner.DestroyCurrentSheep();
+        DestroyCurrentSheep();
 
         if (_sheepOver == false)
-            _spawner.CreateSheep();
+            _spawner.CreateSheep(_currentLevelConfig.Color);
     }
 
     private void OnSheepJumped() {
         _sheepCounter.AddJump();
-        _spawner.DestroyCurrentSheep();
+        DestroyCurrentSheep();
 
         if (_sheepOver == false)
-            _spawner.CreateSheep();
+            _spawner.CreateSheep(_currentLevelConfig.Color);
+    }
+
+    private void DestroyCurrentSheep() {
+        Destroy(_currentSheep.gameObject);
+        _currentSheep = null;
     }
 
     private void OnSheepIsOver() {
@@ -133,12 +146,45 @@ public class GameplayMediator : IDisposable {
         _environmentSound.PlaySound(MusicType.GameOver);
     }
 
+    #endregion
+    
+    private void OnLevelStarted(LevelConfig config) {
+        if (_currentLevelConfig != config)
+            _currentLevelConfig = config;
+
+        _sheepCounter.SetMaxCount(_currentLevelConfig.SheepCount);
+        _qTESystem.SetLevelConfig(_currentLevelConfig);
+
+        GameDialog.SetServices(_sheepCounter, _qTESystem);
+        ShowGameplayDialog();
+    }
+
+    private void OnPauseClicked(bool value) {
+        SetPause(value);
+    }
+
+    private void OnLearningClicked() {
+        GameDialog.GetPanelByType<LearningPanel>().Show(true);
+    }
+
+    private void OnSettingsClicked() {
+        ShowSettings();
+    }
+
     private void OnResetClicked() {
         _sheepCounter.Reset();
         _qTESystem.Reset();
         _sheepOver = false;
 
-        StartGameplay();
+        OnLevelStarted(_currentLevelConfig);
+    }
+
+    private void StartGameplay() {
+        _sheepCounter.Reset();
+        _environmentSound.PlaySound(MusicType.Gameplay);
+        _spawner.CreateSheep(_currentLevelConfig.Color);
+
+        ShowGameplayDialog();
     }
 
     private void OnMainMenuClicked() {

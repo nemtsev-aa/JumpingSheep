@@ -1,25 +1,26 @@
 using System;
 using UnityEngine;
 
-public class SheepSpawner : MonoBehaviour {
+public class SheepSpawner : IPause {
     public event Action<Sheep> SheepCreated;
 
-    [SerializeField] private Transform _spawnPoint;
-
+    private Transform _spawnPoint;
     private SheepFactory _factory;
-    private Sheep _currentSheep;
+    private bool _isPaused;
 
-    public void Init(SheepFactory factory) {
+    public SheepSpawner(PauseHandler pauseHandler, SheepFactory factory, Transform spawnPoint) {
+        pauseHandler.Add(this);
+
         _factory = factory;
+        _spawnPoint = spawnPoint;
     }
 
-    public void CreateSheep() {
-        _currentSheep = _factory.Get(_spawnPoint);
-        SheepCreated?.Invoke(_currentSheep);
+    public void CreateSheep(SheepColor color) {
+        if (_isPaused == false) {
+            Sheep sheep = _factory.Get(_spawnPoint, color);
+            SheepCreated?.Invoke(sheep);
+        }
     }
 
-    public void DestroyCurrentSheep() {
-        Destroy(_currentSheep.gameObject);
-        _currentSheep = null;
-    }
+    public void SetPause(bool isPaused) => _isPaused = isPaused;
 }

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 public enum MusicType {
     UI,
     Gameplay,

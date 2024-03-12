@@ -3,10 +3,10 @@ using UnityEngine;
 using Zenject;
 
 public class UICompanentsFactory {
-    private List<UICompanent> _companents;
+    private readonly List<UICompanent> _companents;
     
     private UICompanentVisitor _visitor;
-    private DiContainer _container;
+    private readonly DiContainer _container;
 
     public UICompanentsFactory(DiContainer container, UICompanentPrefabs companents) {
         _container = container;
