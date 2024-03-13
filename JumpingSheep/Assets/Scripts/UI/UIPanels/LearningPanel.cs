@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class LearningPanel : UIPanel {
-    public event Action PlayClicked;
-    public event Action MainMenuClicked;
+    public event Action PlayButtonClicked;
+    public event Action MainMenuButtonClicked;
 
     [SerializeField] private TextMeshProUGUI _learnText;
     [SerializeField] private Button _playButton;
@@ -18,7 +18,7 @@ public class LearningPanel : UIPanel {
     public override void Reset() {
         base.Reset();
 
-        Show(true);
+        Show(false);
     }
 
     public override void AddListeners() {
@@ -36,11 +36,11 @@ public class LearningPanel : UIPanel {
     }
 
     private void MainMenuButtonClick() {
-        MainMenuClicked?.Invoke();
+        MainMenuButtonClicked?.Invoke();
     }
 
     private void PlayButtonClick() {
-        PlayClicked?.Invoke();
+        PlayButtonClicked?.Invoke();
     }
 
 

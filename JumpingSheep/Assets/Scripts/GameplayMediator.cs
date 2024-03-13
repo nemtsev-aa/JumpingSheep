@@ -38,7 +38,9 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     public void SetPause(bool isPaused) {
         _pauseHandler.SetPause(isPaused);
-        _currentSheep.SetPause(isPaused);
+
+        if (_currentSheep != null)
+            _currentSheep.SetPause(isPaused);
     }
 
     #region Switching Dialogs

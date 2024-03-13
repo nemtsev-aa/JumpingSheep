@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class ResultPanel : UIPanel {
-    public event Action MainMenuClick;
-    public event Action ResetClicked;
+    public event Action MainMenuButtonClicked;
+    public event Action ResetButtonClicked;
 
     [SerializeField] private TextMeshProUGUI _resultLabel;
     [SerializeField] private TextMeshProUGUI _scoreText;
@@ -47,8 +47,8 @@ public class ResultPanel : UIPanel {
         _scoreText.text = _counter.Result;
     }
 
-    private void MainMenuButtonClick() => MainMenuClick?.Invoke();
+    private void MainMenuButtonClick() => MainMenuButtonClicked?.Invoke();
 
-    private void ResetButtonClick() => ResetClicked?.Invoke();
+    private void ResetButtonClick() => ResetButtonClicked?.Invoke();
 
 }

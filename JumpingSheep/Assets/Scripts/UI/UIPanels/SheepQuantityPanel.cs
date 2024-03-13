@@ -26,7 +26,6 @@ public class SheepQuantityPanel : UIPanel {
             if (_sheepIcons != null && _sheepIcons.Count == _counter.MaxCount)
                 return;
 
-            
             ClearSheepIcons();
             _sheepIconQuantity = _counter.MaxCount;
             CreateIcons();

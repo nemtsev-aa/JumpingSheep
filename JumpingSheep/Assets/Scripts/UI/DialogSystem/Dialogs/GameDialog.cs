@@ -1,17 +1,12 @@
 using System;
 using Zenject;
-using UnityEngine;
-using UnityEngine.UI;
 
 public class GameDialog : Dialog {
     public event Action PlayClicked;
-    public event Action LearningClicked;
-    public event Action ResetClicked;
     public event Action MainMenuClicked;
+    public event Action ResetClicked;
     public event Action<bool> PauseClicked;
-
-    [SerializeField] private Button _learningButton;
-    [SerializeField] private Button _pauseButton;
+    public event Action LearningClicked;
 
     private PauseHandler _pauseHandler;
     private UICompanentsFactory _factory;
@@ -24,7 +19,8 @@ public class GameDialog : Dialog {
     private ResultPanel ResultPanel => GetPanelByType<ResultPanel>();
     private InnerGlowPanel InnerGlowPanel => GetPanelByType<InnerGlowPanel>();
     private NavigationPanel NavigationPanel => GetPanelByType<NavigationPanel>();
-
+    private PausePanel PausePanel => GetPanelByType<PausePanel>();
+    
     private bool IsPaused => _pauseHandler.IsPaused;
     
     [Inject]
@@ -50,35 +46,43 @@ public class GameDialog : Dialog {
     public override void AddListeners() {
         base.AddListeners();
 
-        _learningButton.onClick.AddListener(LearningButtonClick);
-        _pauseButton.onClick.AddListener(PauseButtonClick);
+        NavigationPanel.LearningButtonClicked += OnLearningButtonClicked;
+        NavigationPanel.PauseButtonClicked += OnPauseButtonClicked;
 
-        LearningPanel.PlayClicked += OnPlayClicked;
-        LearningPanel.MainMenuClicked += OnMainMenuClick;
+        PausePanel.PlayButtonClicked += OnPlayClicked;
+        PausePanel.MainMenuButtonClicked += OnMainMenuClick;
 
-        ResultPanel.ResetClicked += OnResetClicked;
-        ResultPanel.MainMenuClick += OnMainMenuClick;
+        LearningPanel.PlayButtonClicked += OnPlayClicked;
+        LearningPanel.MainMenuButtonClicked += OnMainMenuClick;
+
+        ResultPanel.ResetButtonClicked += OnResetClicked;
+        ResultPanel.MainMenuButtonClicked += OnMainMenuClick;
     }
 
     public override void RemoveListeners() {
         base.RemoveListeners();
 
-        _learningButton.onClick.RemoveListener(LearningButtonClick);
-        _pauseButton.onClick.RemoveListener(PauseButtonClick);
-
         _counter.SheepIsOver -= OnSheepIsOver;
 
-        LearningPanel.PlayClicked -= OnPlayClicked;
-        LearningPanel.MainMenuClicked -= OnMainMenuClick;
+        NavigationPanel.LearningButtonClicked -= OnLearningButtonClicked;
+        NavigationPanel.PauseButtonClicked -= OnPauseButtonClicked;
 
-        ResultPanel.ResetClicked -= OnResetClicked;
-        ResultPanel.MainMenuClick -= OnMainMenuClick;
+        PausePanel.PlayButtonClicked -= OnPlayClicked;
+        PausePanel.MainMenuButtonClicked -= OnMainMenuClick;
+
+        LearningPanel.PlayButtonClicked -= OnPlayClicked;
+        LearningPanel.MainMenuButtonClicked -= OnMainMenuClick;
+
+        ResultPanel.ResetButtonClicked -= OnResetClicked;
+        ResultPanel.MainMenuButtonClicked -= OnMainMenuClick;
 
         _qTESystem.Started -= OnQTESystemStarted;
         _qTESystem.AllEventsCompleted -= OnQTESystemAllEventsCompleted;
     }
 
     public override void ResetPanels() {
+        NavigationPanel.Reset();
+        PausePanel.Reset();
         LearningPanel.Reset();
         ResultPanel.Reset();
         InnerGlowPanel.Reset();
@@ -86,9 +90,12 @@ public class GameDialog : Dialog {
     }
 
     public override void InitializationPanels() {
-        NavigationPanel.Show(true);
-
+        NavigationPanel.Init();
         LearningPanel.Init();
+        PausePanel.Init();
+
+        NavigationPanel.Show(true);
+        PausePanel.Show(false);
         LearningPanel.Show(false);
         QTEEventsPanel.Show(false);
         SheepQuantityPanel.Show(false);
@@ -123,15 +130,6 @@ public class GameDialog : Dialog {
         MainMenuClicked?.Invoke();
     }
 
-    private void LearningButtonClick() {
-        LearningClicked?.Invoke();
-    }
-
-    private void PauseButtonClick() {
-        _pauseHandler.SetPause(!IsPaused);
-        PauseClicked?.Invoke(IsPaused);
-    }
-
     private void OnQTESystemStarted() {
         ShowInnerGlowPanel(true);
         QTEEventsPanel.Show(true);
@@ -140,6 +138,21 @@ public class GameDialog : Dialog {
     private void OnQTESystemAllEventsCompleted(bool value) {
         ShowInnerGlowPanel(false);
         QTEEventsPanel.Show(false);
+    }
+
+    private void OnPauseButtonClicked() {
+        NavigationPanel.Show(false);
+        PausePanel.Show(true);
+
+        _pauseHandler.SetPause(!IsPaused);
+        PauseClicked?.Invoke(IsPaused);
+    }
+
+    private void OnLearningButtonClicked() {
+        OnPauseButtonClicked();
+
+        NavigationPanel.Show(false);
+        LearningPanel.Show(true);
     }
 
     private void ShowInnerGlowPanel(bool panelStatus) {

@@ -30,5 +30,7 @@ public class InnerGlowPanel : UIPanel {
 
     public override void Reset() {
         FinishedAnimation();
+
+        Show(false);
     }
 }
