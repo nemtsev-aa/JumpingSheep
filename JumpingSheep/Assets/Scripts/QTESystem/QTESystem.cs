@@ -71,7 +71,9 @@ public class QTESystem : IPause, ITickable, IDisposable {
 
         for (int i = 0; i < EventsCount; i++) {
             var index = UnityEngine.Random.Range(0, _eventConfigs.Count); 
+            
             QTEEventConfig config = _eventConfigs[index];
+            config.TimeToSwipe = _levelConfig.QTEConfig.EventDuration;
 
             CreateEvent(config);
         }
@@ -134,6 +136,7 @@ public class QTESystem : IPause, ITickable, IDisposable {
 
     public void Dispose() {
         ClearCompanents();
+
         _pauseHandler.Remove(this);
     }
 

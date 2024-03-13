@@ -6,11 +6,13 @@ public class QTEEventsPanel : UIPanel {
 
     private IReadOnlyList<QTEEvent> _events;
     private UICompanentsFactory _factory;
+    private PauseHandler _pauseHandler;
     private List<QTEEventView> _eventViews;
 
-    public void Init(IReadOnlyList<QTEEvent> events, UICompanentsFactory factory) {
+    public void Init(PauseHandler pauseHandler, IReadOnlyList<QTEEvent> events, UICompanentsFactory factory) {
         _events = events;
         _factory = factory;
+        _pauseHandler = pauseHandler;
 
         CreateEventViews();
     }
@@ -22,7 +24,7 @@ public class QTEEventsPanel : UIPanel {
             QTEEventViewConfig viewConfig = new QTEEventViewConfig();
             
             QTEEventView eventView = _factory.Get<QTEEventView>(viewConfig, _qTEEventViewsParent);
-            eventView.Init(iEvent);
+            eventView.Init(iEvent, _pauseHandler);
 
             _eventViews.Add(eventView);
         }

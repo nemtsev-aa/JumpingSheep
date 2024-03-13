@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 
-public class QTEEventView : UICompanent, IDisposable {
+public class QTEEventView : UICompanent, IPause, IDisposable {
     private const int LoopCount = 7;
 
     [SerializeField] private Image _backgroundImage;
@@ -13,26 +13,37 @@ public class QTEEventView : UICompanent, IDisposable {
     [SerializeField] private Image _iconImage;
 
     private QTEEvent _qteEvent;
-    private float EventTime => _qteEvent.Config.TimeToSwipe;
+    private PauseHandler _pauseHandler;
+
+    private float TimeToSwipe => _qteEvent.Config.TimeToSwipe;
     private float _time;
 
     private Sequence _sequence;
     private Guid _uid;
+    private bool _isPaused;
 
-    public void Init(QTEEvent qteEvent) {
+    public void Init(QTEEvent qteEvent, PauseHandler pauseHandler) {
         _qteEvent = qteEvent;
+        
+        _pauseHandler = pauseHandler;
+        _pauseHandler.Add(this);
 
         _iconImage.sprite = _qteEvent.Config.SwipeDirectionIcon;
 
         AddListener();
     }
 
+    public void SetPause(bool isPaused) => _isPaused = isPaused;
+
     private void Update() {
+        if (_isPaused)
+            return;
+
         if (_qteEvent != null && _qteEvent.CurrentState == QTEEventState.Started) {
             _time += Time.deltaTime;
 
-            if (_time <= EventTime)
-                _fillerImage.fillAmount = (EventTime - _time) / EventTime;
+            if (_time <= TimeToSwipe)
+                _fillerImage.fillAmount = (TimeToSwipe - _time) / TimeToSwipe;
         }
     }
 
@@ -92,6 +103,9 @@ public class QTEEventView : UICompanent, IDisposable {
 
     public override void Dispose() {
         base.Dispose();
+
         RemoveLisener();
+        _pauseHandler.Remove(this);
     }
+
 }

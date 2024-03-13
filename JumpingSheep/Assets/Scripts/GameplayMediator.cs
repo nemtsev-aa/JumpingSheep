@@ -36,12 +36,8 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         ShowMainMenuDialog();
     }
 
-    public void SetPause(bool isPaused) {
-        _pauseHandler.SetPause(isPaused);
-
-        if (_currentSheep != null)
-            _currentSheep.SetPause(isPaused);
-    }
+    public void SetPause(bool isPaused) => _pauseHandler.SetPause(isPaused);
+ 
 
     #region Switching Dialogs
 
@@ -55,6 +51,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
         _environmentSound.PlaySound(MusicType.Gameplay);
         _dialogSwitcher.ShowDialog(DialogTypes.Game);
+
     }
 
     private void ShowSettings() => _dialogSwitcher.ShowDialog(DialogTypes.Settings);
@@ -81,7 +78,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         GameDialog.MainMenuClicked += OnMainMenuClicked;
         GameDialog.PauseClicked += OnPauseClicked;
         GameDialog.LearningClicked += OnLearningClicked;
-        GameDialog.SettingsClicked -= OnSettingsClicked;
+        GameDialog.SettingsClicked += OnSettingsClicked;
 
         _spawner.SheepCreated += OnSheepCreated;
         _sheepCounter.SheepIsOver += OnSheepIsOver;
@@ -115,7 +112,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     private void OnSheepCreated(Sheep sheep) {
         _currentSheep = sheep;
-        _currentSheep.Init(_qTESystem);
+        _currentSheep.Init(_qTESystem, _pauseHandler);
 
         _currentSheep.EventsHandler.Striked += OnSheepStriked;
         _currentSheep.EventsHandler.Jumped += OnSheepJumped;
@@ -158,20 +155,14 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _qTESystem.SetLevelConfig(_currentLevelConfig);
 
         GameDialog.SetServices(_sheepCounter, _qTESystem);
-        ShowGameplayDialog();
+        StartGameplay();
     }
 
-    private void OnPauseClicked(bool value) {
-        SetPause(value);
-    }
+    private void OnPauseClicked(bool value) => SetPause(value);
 
-    private void OnLearningClicked() {
-        GameDialog.GetPanelByType<LearningPanel>().Show(true);
-    }
+    private void OnLearningClicked() => GameDialog.GetPanelByType<LearningPanel>().Show(true);
 
-    private void OnSettingsClicked() {
-        ShowSettings();
-    }
+    private void OnSettingsClicked() => ShowSettings();
 
     private void OnResetClicked() {
         _sheepCounter.Reset();

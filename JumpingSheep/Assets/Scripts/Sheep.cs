@@ -20,11 +20,11 @@ public class Sheep : MonoBehaviour, IPause {
 
     private bool _QTEActive = false;
     private bool _qTEResult = false;
-    private bool _isPaused;
+    private bool _isPaused = false;
 
     public AnimatorEventsHandler EventsHandler { get; private set; }
 
-    public void Init(QTESystem qTESystem) {
+    public void Init(QTESystem qTESystem, PauseHandler pauseHandler) {
         _rigidbody = GetComponent<Rigidbody>();
         _animator = GetComponentInChildren<Animator>();
         _soundManager = GetComponent<SheepSoundManager>();
@@ -34,6 +34,8 @@ public class Sheep : MonoBehaviour, IPause {
 
         _qTESystem = qTESystem;
         _qTESystem.AllEventsCompleted += OnQTESystemAllEventsCompleted;
+
+        pauseHandler.Add(this);
 
         _animator.SetBool(IsMove, true);
         _currentSpeed = _moveSpeed;

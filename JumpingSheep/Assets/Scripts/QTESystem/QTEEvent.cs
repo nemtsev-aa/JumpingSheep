@@ -18,13 +18,14 @@ public class QTEEvent : IDisposable {
     public QTEEvent(SwipeHandler swipeHandler) {
         _swipeHandler = swipeHandler;
     }
+
     ~QTEEvent() {
         Debug.Log("QTEEvent: Destructor was called");
     }
 
     public QTEEventState CurrentState { get; private set; }
     public QTEEventConfig Config { get; private set; }
-    private float EventTime => Config.TimeToSwipe;
+    private float TimeToSwipe => Config.TimeToSwipe;
     
     public void Init(QTEEventConfig config) {
         Config = config;
@@ -40,13 +41,13 @@ public class QTEEvent : IDisposable {
     public void Update() {
         _time += Time.deltaTime;
 
-        if (_time >= EventTime) {
+        if (_time >= TimeToSwipe) {
             _time = 0f;
             StateChanged?.Invoke(QTEEventState.FailFinished);
             return;
         }
 
-        if (_direction == Config.SwipeDirectionValue) {
+        if (_direction != SwipeDirection.None && _direction == Config.SwipeDirectionValue) {
             StateChanged?.Invoke(QTEEventState.TrueFinished);
             return;
         }

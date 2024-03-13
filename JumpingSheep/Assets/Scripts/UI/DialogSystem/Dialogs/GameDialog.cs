@@ -12,7 +12,7 @@ public class GameDialog : Dialog {
     private UICompanentsFactory _factory;
     private SheepQuantityCounter _counter;
     private QTESystem _qTESystem;
-    
+
     private LearningPanel LearningPanel => GetPanelByType<LearningPanel>();
     private SheepQuantityPanel SheepQuantityPanel => GetPanelByType<SheepQuantityPanel>();
     private QTEEventsPanel QTEEventsPanel => GetPanelByType<QTEEventsPanel>();
@@ -35,7 +35,7 @@ public class GameDialog : Dialog {
 
         ResultPanel.Init(_counter);
         SheepQuantityPanel.Init(_counter);
-        QTEEventsPanel.Init(_qTESystem.Events, _factory);
+        QTEEventsPanel.Init(_pauseHandler, _qTESystem.Events, _factory);
 
         _counter.SheepIsOver += OnSheepIsOver;
 
@@ -45,6 +45,8 @@ public class GameDialog : Dialog {
 
     public override void AddListeners() {
         base.AddListeners();
+
+        SettingsClicked += OnSettingsButtonClicked;
 
         NavigationPanel.LearningButtonClicked += OnLearningButtonClicked;
         NavigationPanel.PauseButtonClicked += OnPauseButtonClicked;
@@ -63,6 +65,7 @@ public class GameDialog : Dialog {
         base.RemoveListeners();
 
         _counter.SheepIsOver -= OnSheepIsOver;
+        SettingsClicked -= OnSettingsButtonClicked;
 
         NavigationPanel.LearningButtonClicked -= OnLearningButtonClicked;
         NavigationPanel.PauseButtonClicked -= OnPauseButtonClicked;
@@ -110,10 +113,22 @@ public class GameDialog : Dialog {
     }
 
     private void OnPlayClicked() {
-        PlayClicked?.Invoke();
-
         LearningPanel.Show(false);
-        SheepQuantityPanel.Show(true);        
+        PausePanel.Show(false);
+
+        SheepQuantityPanel.Show(true);
+        NavigationPanel.Show(true);
+
+        PauseClicked?.Invoke(false);
+    }
+
+    private void OnPauseButtonClicked() {
+        PausePanel.Show(true);
+
+        NavigationPanel.Show(false);
+        SheepQuantityPanel.Show(false);
+
+        PauseClicked?.Invoke(true);
     }
 
     private void OnResetClicked() {
@@ -133,26 +148,32 @@ public class GameDialog : Dialog {
     private void OnQTESystemStarted() {
         ShowInnerGlowPanel(true);
         QTEEventsPanel.Show(true);
+
+        NavigationPanel.Show(false);
     }
 
     private void OnQTESystemAllEventsCompleted(bool value) {
         ShowInnerGlowPanel(false);
         QTEEventsPanel.Show(false);
-    }
 
-    private void OnPauseButtonClicked() {
-        NavigationPanel.Show(false);
-        PausePanel.Show(true);
-
-        _pauseHandler.SetPause(!IsPaused);
-        PauseClicked?.Invoke(IsPaused);
+        NavigationPanel.Show(true);
     }
 
     private void OnLearningButtonClicked() {
-        OnPauseButtonClicked();
-
-        NavigationPanel.Show(false);
         LearningPanel.Show(true);
+ 
+        NavigationPanel.Show(false);
+        SheepQuantityPanel.Show(false);
+
+        PauseClicked?.Invoke(true);
+    }
+
+    private void OnSettingsButtonClicked() {
+        NavigationPanel.Show(false);
+        SheepQuantityPanel.Show(false);
+        QTEEventsPanel.Show(false);
+
+        PauseClicked?.Invoke(true);
     }
 
     private void ShowInnerGlowPanel(bool panelStatus) {
