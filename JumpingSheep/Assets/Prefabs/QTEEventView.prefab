@@ -53,6 +53,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5114dfcc8c767145b7775cd38eef25f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _trueResult: {fileID: 21300000, guid: 6fd0f04c6888a47cd93e4597024c5847, type: 3}
+  _falseResult: {fileID: 21300000, guid: 542d2f4f2f0c04f3db970dbe867a1d92, type: 3}
   _backgroundImage: {fileID: 4822456614600005461}
   _fillerImage: {fileID: 1359735978746034081}
   _labelText: {fileID: 1757460240916249454}

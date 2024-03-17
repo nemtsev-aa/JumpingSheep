@@ -19,6 +19,7 @@ public class GlobalInstaller : MonoInstaller {
     //[SerializeField] private Pointer _pointerPrefab;
 
     public override void InstallBindings() {
+        BindServices();
         BindPauseHandler();
         BindConfigs();
         BindUICompanentsConfig();
@@ -89,5 +90,8 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<QTESoundManager>().FromInstance(qTESoundManager).AsSingle();   
     }
 
-
+    private void BindServices() {
+        Container.Bind<SheepQuantityCounter>().AsSingle();
+        Container.Bind<Score>().AsSingle();
+    }
 }

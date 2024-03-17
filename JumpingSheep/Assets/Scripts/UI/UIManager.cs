@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 public class UIManager : MonoBehaviour {
     private DialogFactory _factory;
@@ -15,11 +16,13 @@ public class UIManager : MonoBehaviour {
     
     public DialogSwitcher DialogSwitcher { get; private set; }
 
-    public void Init(DialogFactory factory) {
+    [Inject]
+    public void Constuct(DialogFactory factory) {
         _factory = factory;
+        _factory.SetDialogsParent(GetComponent<RectTransform>());
+    }
 
-        _factory.SetDialogsParent(this.GetComponent<RectTransform>());
-
+    public void Init() {
         CreateDialogsDictionary();
 
         DialogSwitcher = new DialogSwitcher(this);

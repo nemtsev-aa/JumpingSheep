@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Zenject;
 
 public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private PauseHandler _pauseHandler;
@@ -11,33 +12,36 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     private LevelConfig _currentLevelConfig;
     private QTESystem _qTESystem;
+    private Score _score;
     private Sheep _currentSheep;
     private bool _sheepOver;
-    private bool _isPaused;
 
     private MainMenuDialog MainMenuDialog => _uIManager.MainMenuDialog;
     private LevelSelectionDialog LevelSelectionDialog => _uIManager.LevelSelectionDialog;
     private GameDialog GameDialog => _uIManager.GameDialog;
     private SettingsDialog SettingsDialog => _uIManager.SettingsDialog;
     private AboutDialog AboutDialog => _uIManager.AboutDialog;
-    
-    public void Init(PauseHandler pauseHandler, SheepSpawner spawner, QTESystem qTESystem, UIManager uIManager, EnvironmentSoundManager environmentSound) {
+
+    [Inject]
+    public void Construct(PauseHandler pauseHandler, SheepSpawner spawner, QTESystem qTESystem, Score score, SheepQuantityCounter sheepCounter) {
         _pauseHandler = pauseHandler;
         _spawner = spawner;
         _qTESystem = qTESystem;
+        _score = score;
+        _sheepCounter = sheepCounter;
+    }
 
+    public void Init(UIManager uIManager, EnvironmentSoundManager environmentSound) {
         _uIManager = uIManager;
         _environmentSound = environmentSound;
 
-        _sheepCounter = new SheepQuantityCounter();
         _dialogSwitcher = uIManager.DialogSwitcher;
-
         AddListener();
         ShowMainMenuDialog();
     }
 
     public void SetPause(bool isPaused) => _pauseHandler.SetPause(isPaused);
- 
+
 
     #region Switching Dialogs
 
@@ -47,11 +51,8 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     private void ShowGameplayDialog() {
-        GameDialog.GetPanelByType<LearningPanel>().Show(false);
-
         _environmentSound.PlaySound(MusicType.Gameplay);
         _dialogSwitcher.ShowDialog(DialogTypes.Game);
-
     }
 
     private void ShowSettings() => _dialogSwitcher.ShowDialog(DialogTypes.Settings);
@@ -64,7 +65,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     #region Dialogs Events
     private void AddListener() {
-        SettingsDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
+        SettingsDialog.BackClicked += OnSettingsDialogBackClicked;
         AboutDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
 
         MainMenuDialog.SettingsDialogShowed += ShowSettings;
@@ -82,10 +83,11 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
         _spawner.SheepCreated += OnSheepCreated;
         _sheepCounter.SheepIsOver += OnSheepIsOver;
+        _qTESystem.EventFinished += OnQTESystemEventFinished;
     }
 
     private void RemoveLisener() {
-        SettingsDialog.BackClicked -= _dialogSwitcher.ShowPreviousDialog;
+        SettingsDialog.BackClicked -= OnSettingsDialogBackClicked;
         AboutDialog.BackClicked -= _dialogSwitcher.ShowPreviousDialog;
 
         MainMenuDialog.SettingsDialogShowed -= ShowSettings;
@@ -103,7 +105,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
         _spawner.SheepCreated -= OnSheepCreated;
         _sheepCounter.SheepIsOver -= OnSheepIsOver;
-
+        _qTESystem.EventFinished -= OnQTESystemEventFinished;
     }
 
     #endregion
@@ -119,7 +121,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     private void OnSheepStriked() {
-        _sheepCounter.AddStrike();
+        _score.SetQTEEventResult(false);
 
         DestroyCurrentSheep();
 
@@ -128,7 +130,8 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     private void OnSheepJumped() {
-        _sheepCounter.AddJump();
+        _score.SetQTEEventResult(true);
+
         DestroyCurrentSheep();
 
         if (_sheepOver == false)
@@ -136,7 +139,11 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     private void DestroyCurrentSheep() {
+        _sheepCounter.TakeSheep();
+        _qTESystem.Reset();
+
         Destroy(_currentSheep.gameObject);
+
         _currentSheep = null;
     }
 
@@ -146,16 +153,20 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     #endregion
-    
+
     private void OnLevelStarted(LevelConfig config) {
         if (_currentLevelConfig != config)
             _currentLevelConfig = config;
 
-        _sheepCounter.SetMaxCount(_currentLevelConfig.SheepCount);
+        _score.SetLevelConfig(_currentLevelConfig);
+        _sheepCounter.SetLevelConfig(_currentLevelConfig);
         _qTESystem.SetLevelConfig(_currentLevelConfig);
 
-        GameDialog.SetServices(_sheepCounter, _qTESystem);
         StartGameplay();
+    }
+
+    private void OnQTESystemEventFinished(bool result) {
+        _score.SetSwipeResult(result);
     }
 
     private void OnPauseClicked(bool value) => SetPause(value);
@@ -163,6 +174,17 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private void OnLearningClicked() => GameDialog.GetPanelByType<LearningPanel>().Show(true);
 
     private void OnSettingsClicked() => ShowSettings();
+
+    private void OnSettingsDialogBackClicked() {
+        if (_pauseHandler.IsPaused) {
+            SetPause(false);
+            SettingsDialog.Show(false);
+
+            ShowGameplayDialog();
+        }
+        else
+            _dialogSwitcher.ShowPreviousDialog();
+    }
 
     private void OnResetClicked() {
         _sheepCounter.Reset();
@@ -173,11 +195,10 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     private void StartGameplay() {
-        _sheepCounter.Reset();
+        ShowGameplayDialog();
+
         _environmentSound.PlaySound(MusicType.Gameplay);
         _spawner.CreateSheep(_currentLevelConfig.Color);
-
-        ShowGameplayDialog();
     }
 
     private void OnMainMenuClicked() {
@@ -187,6 +208,11 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
 
         ShowMainMenuDialog();
+    }
+
+    private void SetStarsCount() {
+        _currentLevelConfig.StarsCount = _score.StarsCount;
+        _currentLevelConfig.Status = LevelStatusTypes.Complited;
     }
 
     public void Dispose() {

@@ -1,54 +1,35 @@
 using System;
 
 public class SheepQuantityCounter {
-    public event Action<int> StrikeCountChanged;
-    public event Action<int> JumpCountChanged;
     public event Action<int> RemainingQuantityChanged;
-
     public event Action SheepIsOver;
 
-    private int _strikeCount;
-    private int _jumpCount;
+    private LevelConfig _levelConfig;
     private int _remainingQuantity;
-    
-    public int MaxCount { get; private set; }
-    
-    public string Result => $"{_jumpCount}/{MaxCount}";
 
     public SheepQuantityCounter() {
-
+        
     }
 
-    public void SetMaxCount(int count) {
-        MaxCount = count;
-        _remainingQuantity = MaxCount;
+    public int MaxQuantity { get; private set; }
+
+    public void SetLevelConfig(LevelConfig levelConfig) {
+        _levelConfig = levelConfig;
+
+        MaxQuantity = _levelConfig.SheepCount;
+        _remainingQuantity = MaxQuantity;
     }
 
-    public void AddStrike() {
-        _strikeCount++;
-        StrikeCountChanged?.Invoke(_strikeCount);
-
-        SetScore();
-    }
-
-    public void AddJump() {
-        _jumpCount++;
-        JumpCountChanged?.Invoke(_jumpCount);
-
-        SetScore();
-    }
-
-    public void Reset() {
-        _strikeCount = 0;
-        _jumpCount = 0;
-        _remainingQuantity = MaxCount;
-    }
-
-    private void SetScore() {
+    public void TakeSheep() {
         _remainingQuantity--;
         RemainingQuantityChanged?.Invoke(_remainingQuantity);
 
         if (_remainingQuantity <= 0)
             SheepIsOver?.Invoke();
     }
+
+    public void Reset() {
+        _remainingQuantity = MaxQuantity;
+    }
+
 }

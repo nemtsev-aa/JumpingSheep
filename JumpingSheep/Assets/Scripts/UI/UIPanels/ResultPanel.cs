@@ -2,22 +2,35 @@ using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class ResultPanel : UIPanel {
+    public const string ResultLabelText = "Ñ÷¸ò";
+
     public event Action MainMenuButtonClicked;
     public event Action ResetButtonClicked;
+
+    [SerializeField] private Transform _starIconsParent;
 
     [SerializeField] private TextMeshProUGUI _resultLabel;
     [SerializeField] private TextMeshProUGUI _scoreText;
     [SerializeField] private Button _resetButton;
     [SerializeField] private Button _mainMenuButton;
-    
-    private SheepQuantityCounter _counter;
 
-    public void Init(SheepQuantityCounter counter) {
-        _counter = counter;
+    private Score _score;
+    private Sequence _mySequence;
+
+    public void Init(Score score) {
+        _score = score;
 
         AddListeners();
+    }
+
+    public override void Show(bool value) {
+        base.Show(value);
+
+        if (value == true)
+            ShowAnimation();
     }
 
     public override void Reset() {
@@ -29,7 +42,8 @@ public class ResultPanel : UIPanel {
     public override void AddListeners() {
         base.AddListeners();
 
-        _counter.SheepIsOver += OnSheepIsOver;
+        _score.ScoreChanged += OnScoreChanged;
+
         _resetButton.onClick.AddListener(ResetButtonClick);
         _mainMenuButton.onClick.AddListener(MainMenuButtonClick);
     }
@@ -37,18 +51,33 @@ public class ResultPanel : UIPanel {
     public override void RemoveListeners() {
         base.RemoveListeners();
 
-        _counter.SheepIsOver -= OnSheepIsOver;
+        _score.ScoreChanged -= OnScoreChanged;
+
         _resetButton.onClick.RemoveListener(ResetButtonClick);
         _mainMenuButton.onClick.RemoveListener(MainMenuButtonClick);
     }
 
-    private void OnSheepIsOver() {
-        _resultLabel.text = "Ñ÷¸ò";
-        _scoreText.text = _counter.Result;
+    private void OnScoreChanged() {
+        _resultLabel.text = ResultLabelText;
+        _scoreText.text = _score.Result;
     }
 
     private void MainMenuButtonClick() => MainMenuButtonClicked?.Invoke();
 
     private void ResetButtonClick() => ResetButtonClicked?.Invoke();
 
+    private void ShowAnimation() {
+        for (int i = 0; i < _starIconsParent.childCount; i++) {
+            Transform star = _starIconsParent.GetChild(i);
+            star.transform.localScale = Vector3.zero;
+        }
+
+        _mySequence = DOTween.Sequence();
+        for (int i = 0; i < _score.StarsCount; i++) {
+            Tween tween = _starIconsParent.GetChild(i).DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBounce);
+            _mySequence.Append(tween);
+        }
+
+        _mySequence.Play();
+    }
 }

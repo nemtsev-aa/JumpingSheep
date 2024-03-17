@@ -96,7 +96,7 @@ public class LevelStatusView : UICompanent {
     }
 
     private void ButtonClick() {
-        if (_config.CurrentStatus != LevelStatusTypes.Ready)
+        if (_config.CurrentStatus == LevelStatusTypes.Locked)
             return;
 
         Selected?.Invoke(_config.Name);

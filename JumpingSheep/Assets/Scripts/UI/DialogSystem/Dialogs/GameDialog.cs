@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Zenject;
 
 public class GameDialog : Dialog {
@@ -12,121 +13,142 @@ public class GameDialog : Dialog {
     private UICompanentsFactory _factory;
     private SheepQuantityCounter _counter;
     private QTESystem _qTESystem;
+    private Score _score;
 
-    private LearningPanel LearningPanel => GetPanelByType<LearningPanel>();
-    private SheepQuantityPanel SheepQuantityPanel => GetPanelByType<SheepQuantityPanel>();
-    private QTEEventsPanel QTEEventsPanel => GetPanelByType<QTEEventsPanel>();
-    private ResultPanel ResultPanel => GetPanelByType<ResultPanel>();
-    private InnerGlowPanel InnerGlowPanel => GetPanelByType<InnerGlowPanel>();
-    private NavigationPanel NavigationPanel => GetPanelByType<NavigationPanel>();
-    private PausePanel PausePanel => GetPanelByType<PausePanel>();
+    private LearningPanel _learningPanel;
+    private SheepQuantityPanel _sheepQuantityPanel;
+    private QTEEventsPanel _qTEEventsPanel;
+    private ResultPanel _resultPanel;
+    private InnerGlowPanel _innerGlowPanel;
+    private NavigationPanel _navigationPanel;
+    private PausePanel _pausePanel;
     
     private bool IsPaused => _pauseHandler.IsPaused;
     
     [Inject]
-    public void Constuct(PauseHandler pauseHandler, UICompanentsFactory factory) {
+    public void Constuct(PauseHandler pauseHandler, UICompanentsFactory factory, SheepQuantityCounter sheepCounter, QTESystem qTESystem, Score score) {
         _pauseHandler = pauseHandler;
         _factory = factory;
-    }
 
-    public void SetServices(SheepQuantityCounter sheepCounter, QTESystem qTESystem) {
+         _learningPanel = GetPanelByType<LearningPanel>();
+        _sheepQuantityPanel = GetPanelByType<SheepQuantityPanel>();
+        _qTEEventsPanel = GetPanelByType<QTEEventsPanel>();
+        _resultPanel = GetPanelByType<ResultPanel>();
+        _innerGlowPanel = GetPanelByType<InnerGlowPanel>();
+        _navigationPanel = GetPanelByType<NavigationPanel>();
+        _pausePanel = GetPanelByType<PausePanel>();
+
         _counter = sheepCounter;
         _qTESystem = qTESystem;
+        _score = score;
 
-        ResultPanel.Init(_counter);
-        SheepQuantityPanel.Init(_counter);
-        QTEEventsPanel.Init(_pauseHandler, _qTESystem.Events, _factory);
+        _resultPanel.Init(_score);
+        _sheepQuantityPanel.Init(_counter);
 
-        _counter.SheepIsOver += OnSheepIsOver;
+        _qTEEventsPanel.Init(_qTESystem, _pauseHandler, _factory);
+    }
 
-        _qTESystem.Started += OnQTESystemStarted;
-        _qTESystem.AllEventsCompleted += OnQTESystemAllEventsCompleted;
+    public override void Show(bool value) {
+        base.Show(value);
+
+        if (value == true) {
+            _learningPanel.Show(false);
+            _sheepQuantityPanel.Show(true);
+        }
     }
 
     public override void AddListeners() {
         base.AddListeners();
 
+        _counter.SheepIsOver += OnSheepIsOver;
+
+        _qTESystem.Started += OnQTESystemStarted;
+        _qTESystem.AllEventsCompleted += OnQTESystemAllEventsCompleted;
+
         SettingsClicked += OnSettingsButtonClicked;
 
-        NavigationPanel.LearningButtonClicked += OnLearningButtonClicked;
-        NavigationPanel.PauseButtonClicked += OnPauseButtonClicked;
+        _navigationPanel.LearningButtonClicked += OnLearningButtonClicked;
+        _navigationPanel.PauseButtonClicked += OnPauseButtonClicked;
 
-        PausePanel.PlayButtonClicked += OnPlayClicked;
-        PausePanel.MainMenuButtonClicked += OnMainMenuClick;
+        _pausePanel.PlayButtonClicked += OnPlayClicked;
+        _pausePanel.MainMenuButtonClicked += OnMainMenuClick;
 
-        LearningPanel.PlayButtonClicked += OnPlayClicked;
-        LearningPanel.MainMenuButtonClicked += OnMainMenuClick;
+        _learningPanel.PlayButtonClicked += OnPlayClicked;
+        _learningPanel.MainMenuButtonClicked += OnMainMenuClick;
 
-        ResultPanel.ResetButtonClicked += OnResetClicked;
-        ResultPanel.MainMenuButtonClicked += OnMainMenuClick;
+        _resultPanel.ResetButtonClicked += OnResetClicked;
+        _resultPanel.MainMenuButtonClicked += OnMainMenuClick;
     }
 
     public override void RemoveListeners() {
         base.RemoveListeners();
 
         _counter.SheepIsOver -= OnSheepIsOver;
-        SettingsClicked -= OnSettingsButtonClicked;
-
-        NavigationPanel.LearningButtonClicked -= OnLearningButtonClicked;
-        NavigationPanel.PauseButtonClicked -= OnPauseButtonClicked;
-
-        PausePanel.PlayButtonClicked -= OnPlayClicked;
-        PausePanel.MainMenuButtonClicked -= OnMainMenuClick;
-
-        LearningPanel.PlayButtonClicked -= OnPlayClicked;
-        LearningPanel.MainMenuButtonClicked -= OnMainMenuClick;
-
-        ResultPanel.ResetButtonClicked -= OnResetClicked;
-        ResultPanel.MainMenuButtonClicked -= OnMainMenuClick;
 
         _qTESystem.Started -= OnQTESystemStarted;
         _qTESystem.AllEventsCompleted -= OnQTESystemAllEventsCompleted;
+
+        SettingsClicked -= OnSettingsButtonClicked;
+
+        _navigationPanel.LearningButtonClicked -= OnLearningButtonClicked;
+        _navigationPanel.PauseButtonClicked -= OnPauseButtonClicked;
+        
+        _pausePanel.PlayButtonClicked -= OnPlayClicked;
+        _pausePanel.MainMenuButtonClicked -= OnMainMenuClick;
+        
+        _learningPanel.PlayButtonClicked -= OnPlayClicked;
+        _learningPanel.MainMenuButtonClicked -= OnMainMenuClick;
+        
+        _resultPanel.ResetButtonClicked -= OnResetClicked;
+        _resultPanel.MainMenuButtonClicked -= OnMainMenuClick;
     }
 
     public override void ResetPanels() {
-        NavigationPanel.Reset();
-        PausePanel.Reset();
-        LearningPanel.Reset();
-        ResultPanel.Reset();
-        InnerGlowPanel.Reset();
-        SheepQuantityPanel.Reset();
+        _navigationPanel.Reset();
+        _pausePanel.Reset();
+        _learningPanel.Reset();
+        _resultPanel.Reset();
+        _innerGlowPanel.Reset();
+        _sheepQuantityPanel.Reset();
     }
 
     public override void InitializationPanels() {
-        NavigationPanel.Init();
-        LearningPanel.Init();
-        PausePanel.Init();
+        _navigationPanel.Init();
+        _learningPanel.Init();
+        _pausePanel.Init();
 
-        NavigationPanel.Show(true);
-        PausePanel.Show(false);
-        LearningPanel.Show(false);
-        QTEEventsPanel.Show(false);
-        SheepQuantityPanel.Show(false);
-        ResultPanel.Show(false);
-        InnerGlowPanel.Show(false);
+        _navigationPanel.Show(true);
+        _pausePanel.Show(false);
+        _learningPanel.Show(false);
+        _qTEEventsPanel.Show(false);
+        _sheepQuantityPanel.Show(false);
+        _resultPanel.Show(false);
+        _innerGlowPanel.Show(false);
     }
 
     private void OnSheepIsOver() {
-        ResultPanel.Show(true);
-        SheepQuantityPanel.Show(false);
-        InnerGlowPanel.Show(false);
+        _resultPanel.Show(true);
+
+        _sheepQuantityPanel.Show(false);
+        _innerGlowPanel.Show(false);
+        _navigationPanel.Show(false);
     }
 
     private void OnPlayClicked() {
-        LearningPanel.Show(false);
-        PausePanel.Show(false);
+        _learningPanel.Show(false);
+        _pausePanel.Show(false);
 
-        SheepQuantityPanel.Show(true);
-        NavigationPanel.Show(true);
+        _sheepQuantityPanel.Show(true);
+        _navigationPanel.Show(true);
 
         PauseClicked?.Invoke(false);
     }
 
     private void OnPauseButtonClicked() {
-        PausePanel.Show(true);
+        _pausePanel.Show(true);
 
-        NavigationPanel.Show(false);
-        SheepQuantityPanel.Show(false);
+        _navigationPanel.Show(false);
+        _sheepQuantityPanel.Show(false);
 
         PauseClicked?.Invoke(true);
     }
@@ -134,8 +156,8 @@ public class GameDialog : Dialog {
     private void OnResetClicked() {
         ResetPanels();
 
-        LearningPanel.Show(false);
-        SheepQuantityPanel.Show(true);
+        _learningPanel.Show(false);
+        _sheepQuantityPanel.Show(true);
 
         ResetClicked?.Invoke();
     }
@@ -146,42 +168,49 @@ public class GameDialog : Dialog {
     }
 
     private void OnQTESystemStarted() {
-        ShowInnerGlowPanel(true);
-        QTEEventsPanel.Show(true);
+        _navigationPanel.Show(false);
 
-        NavigationPanel.Show(false);
+        ShowInnerGlowPanel(true);
+
+        _qTEEventsPanel.Show(true);
     }
 
     private void OnQTESystemAllEventsCompleted(bool value) {
         ShowInnerGlowPanel(false);
-        QTEEventsPanel.Show(false);
 
-        NavigationPanel.Show(true);
+        HideqTEEventsPanel();
+        _navigationPanel.Show(true);
+    }
+
+    private async Task HideqTEEventsPanel() {
+
+        await Task.Delay(TimeSpan.FromSeconds(2));
+        _qTEEventsPanel.Show(false);
     }
 
     private void OnLearningButtonClicked() {
-        LearningPanel.Show(true);
- 
-        NavigationPanel.Show(false);
-        SheepQuantityPanel.Show(false);
+        _learningPanel.Show(true);
+
+        _navigationPanel.Show(false);
+        _sheepQuantityPanel.Show(false);
 
         PauseClicked?.Invoke(true);
     }
 
     private void OnSettingsButtonClicked() {
-        NavigationPanel.Show(false);
-        SheepQuantityPanel.Show(false);
-        QTEEventsPanel.Show(false);
+        _navigationPanel.Show(false);
+        _sheepQuantityPanel.Show(false);
+        _qTEEventsPanel.Show(false);
 
         PauseClicked?.Invoke(true);
     }
 
     private void ShowInnerGlowPanel(bool panelStatus) {
-        InnerGlowPanel.gameObject.SetActive(panelStatus);
+        _innerGlowPanel.Show(panelStatus);
 
-        if (panelStatus) 
-            InnerGlowPanel.StartedAnimation();
+        if (panelStatus)
+            _innerGlowPanel.StartedAnimation();
         else 
-            InnerGlowPanel.FinishedAnimation();
+            _innerGlowPanel.FinishedAnimation();
     }
 }

@@ -22,7 +22,7 @@ MonoBehaviour:
       <EventsCount>k__BackingField: 1
       <MinSuccessfulEventCount>k__BackingField: 1
       <EventDuration>k__BackingField: 2
-  - <Status>k__BackingField: 0
+  - <Status>k__BackingField: 1
     <Name>k__BackingField: 2
     <SheepCount>k__BackingField: 2
     <Color>k__BackingField: 0
@@ -31,7 +31,7 @@ MonoBehaviour:
       <EventsCount>k__BackingField: 2
       <MinSuccessfulEventCount>k__BackingField: 1
       <EventDuration>k__BackingField: 2
-  - <Status>k__BackingField: 0
+  - <Status>k__BackingField: 1
     <Name>k__BackingField: 3
     <SheepCount>k__BackingField: 3
     <Color>k__BackingField: 0

@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
-using Zenject;
 
 public enum QTEEventState {
+    Created,
     Started,
     TrueFinished,
     FailFinished
@@ -10,6 +10,7 @@ public enum QTEEventState {
 
 public class QTEEvent : IDisposable {
     public event Action<QTEEventState> StateChanged;
+    public event Action Disabled;
 
     private float _time;
     private SwipeDirection _direction;
@@ -29,6 +30,7 @@ public class QTEEvent : IDisposable {
     
     public void Init(QTEEventConfig config) {
         Config = config;
+        CurrentState = QTEEventState.Created;
     }
 
     public void Start() {
@@ -39,16 +41,23 @@ public class QTEEvent : IDisposable {
     }
 
     public void Update() {
+        if (CurrentState != QTEEventState.Started)
+            return;
+
         _time += Time.deltaTime;
 
         if (_time >= TimeToSwipe) {
             _time = 0f;
-            StateChanged?.Invoke(QTEEventState.FailFinished);
+            CurrentState = QTEEventState.FailFinished;
+            
+            StateChanged?.Invoke(CurrentState);
             return;
         }
 
         if (_direction != SwipeDirection.None && _direction == Config.SwipeDirectionValue) {
-            StateChanged?.Invoke(QTEEventState.TrueFinished);
+            CurrentState = QTEEventState.TrueFinished;
+            
+            StateChanged?.Invoke(CurrentState);
             return;
         }
     }
@@ -66,6 +75,8 @@ public class QTEEvent : IDisposable {
     }
 
     public void Dispose() {
+        Disabled?.Invoke();
+
         RemoveLisener();
     }
 }

@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 public class QTESystem : IPause, ITickable, IDisposable {
     public event Action Started;
+    public event Action<IReadOnlyList<QTEEvent>> EventsCreated;
     public event Action<bool> AllEventsCompleted;
     public event Action<bool> EventFinished;
 
@@ -11,7 +14,7 @@ public class QTESystem : IPause, ITickable, IDisposable {
     private readonly QTESoundManager _qTESoundManager;
     private readonly SwipeHandler _swipeHandler;
 
-    private List<QTEEvent> _events;
+    private Queue<QTEEvent> _events;
     private readonly List<QTEEventConfig> _eventConfigs;
     private LevelConfig _levelConfig;
 
@@ -30,25 +33,20 @@ public class QTESystem : IPause, ITickable, IDisposable {
         _qTESoundManager.Init(this);
 
         _swipeHandler = swipeHandler;
+
+        _events = new Queue<QTEEvent>();
     }
 
-    public IReadOnlyList<QTEEvent> Events => _events;
     private int MinSuccessfulEventCount => _levelConfig.QTEConfig.MinSuccessfulEventCount;
     private int EventsCount => _levelConfig.QTEConfig.EventsCount;
 
-    public void SetLevelConfig(LevelConfig config) {
-        _levelConfig = config;
-
-        CreateEvents();
-    }
-
+    public void SetLevelConfig(LevelConfig config) => _levelConfig = config;
+    
     public void StartEvents() {
-        if (_events.Count == 0) 
-            CreateEvents();
+        CreateEvents();
 
-        _currentEvent = _events[0];
-        _currentEvent.Start();
-
+        StartNextEvent();
+        
         Started?.Invoke();
     }
 
@@ -61,14 +59,11 @@ public class QTESystem : IPause, ITickable, IDisposable {
 
     public void Reset() {
         _successfulEventCount = 0;
-        _levelConfig = null;
 
-        ClearCompanents();
+        ClearEvents();
     }
 
     private void CreateEvents() {
-        _events = new List<QTEEvent>();
-
         for (int i = 0; i < EventsCount; i++) {
             var index = UnityEngine.Random.Range(0, _eventConfigs.Count); 
             
@@ -77,6 +72,8 @@ public class QTESystem : IPause, ITickable, IDisposable {
 
             CreateEvent(config);
         }
+
+        EventsCreated?.Invoke(new List<QTEEvent>(_events));
     }
 
     private void CreateEvent(QTEEventConfig config) {
@@ -85,10 +82,21 @@ public class QTESystem : IPause, ITickable, IDisposable {
         newEvent.Init(config);
         newEvent.StateChanged += OnStateChanged;
         
-        _events.Add(newEvent);
+        _events.Enqueue(newEvent);
     }
 
-    private void OnStateChanged(QTEEventState state) {
+    private void StartNextEvent() {
+        if (_events.Count > 0) {
+            _currentEvent = _events.Dequeue();
+            _currentEvent.Start();
+           
+            return;
+        }
+
+        SummingUpResults(300f);
+    }
+
+   private void OnStateChanged(QTEEventState state) {
         if (state == QTEEventState.Started)
             return;
 
@@ -103,39 +111,34 @@ public class QTESystem : IPause, ITickable, IDisposable {
             ClearEvent(_currentEvent);
         }
 
-        if (_events.Count > 0) {
-            StartEvents();
-            return;
-        }
-
-        SummingUpResults();  
+        StartNextEvent(); 
     }
 
-    private void SummingUpResults() {
+    private async void SummingUpResults(double delay) {
         bool executionResult = _successfulEventCount >= MinSuccessfulEventCount;
+        _successfulEventCount = 0;
 
+        await Task.Delay(TimeSpan.FromMilliseconds(delay));
         AllEventsCompleted?.Invoke(executionResult);
+    }
+
+    private void ClearEvents() {
+        foreach (var iEvent in _events) {
+            ClearEvent(iEvent);
+        }
+
+        _events.Clear();
     }
 
     private void ClearEvent(QTEEvent qTEEvent) {
         qTEEvent.StateChanged -= OnStateChanged;
-        
-        _events.Remove(qTEEvent);
-        qTEEvent = null;
-    }
-
-    private void ClearCompanents() {
-        if (_events.Count >= 0) {
-            foreach (var iEvent in _events) {
-                iEvent.StateChanged -= OnStateChanged;
-            }
-
-            _events.Clear();
-        }
+        qTEEvent.Dispose();
     }
 
     public void Dispose() {
-        ClearCompanents();
+        ClearEvents();
+
+        _levelConfig = null;
 
         _pauseHandler.Remove(this);
     }

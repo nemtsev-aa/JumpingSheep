@@ -13,7 +13,7 @@ public class SheepQuantityPanel : UIPanel {
 
     public void Init(SheepQuantityCounter counter) {
         _counter = counter;
-        _sheepIconQuantity = _counter.MaxCount;
+        _sheepIconQuantity = _counter.MaxQuantity;
 
         AddListeners();
     }
@@ -23,11 +23,12 @@ public class SheepQuantityPanel : UIPanel {
 
         if (value) {
 
-            if (_sheepIcons != null && _sheepIcons.Count == _counter.MaxCount)
+            if (_sheepIcons != null && _sheepIcons.Count == _counter.MaxQuantity)
                 return;
 
             ClearSheepIcons();
-            _sheepIconQuantity = _counter.MaxCount;
+            _sheepIconQuantity = _counter.MaxQuantity;
+            
             CreateIcons();
         }
     }
@@ -35,7 +36,7 @@ public class SheepQuantityPanel : UIPanel {
     public override void Reset() {
         Show(false);
 
-        if (_sheepIcons != null && _sheepIconQuantity == _counter.MaxCount)
+        if (_sheepIcons != null && _sheepIconQuantity == _counter.MaxQuantity)
             ShowSheepIcons();
         else
             ClearSheepIcons(); 

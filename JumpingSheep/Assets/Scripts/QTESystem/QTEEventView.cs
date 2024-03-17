@@ -7,6 +7,10 @@ using DG.Tweening;
 public class QTEEventView : UICompanent, IPause, IDisposable {
     private const int LoopCount = 7;
 
+    [SerializeField] private Sprite _trueResult;
+    [SerializeField] private Sprite _falseResult;
+
+    [Space(5)]
     [SerializeField] private Image _backgroundImage;
     [SerializeField] private Image _fillerImage;
     [SerializeField] private TextMeshProUGUI _labelText;
@@ -18,8 +22,9 @@ public class QTEEventView : UICompanent, IPause, IDisposable {
     private float TimeToSwipe => _qteEvent.Config.TimeToSwipe;
     private float _time;
 
-    private Sequence _sequence;
-    private Guid _uid;
+    private Tween _startTween;
+    private Sequence _finishSequence;
+
     private bool _isPaused;
 
     public void Init(QTEEvent qteEvent, PauseHandler pauseHandler) {
@@ -36,10 +41,10 @@ public class QTEEventView : UICompanent, IPause, IDisposable {
     public void SetPause(bool isPaused) => _isPaused = isPaused;
 
     private void Update() {
-        if (_isPaused)
+        if (_isPaused || _qteEvent.CurrentState == QTEEventState.Created)
             return;
 
-        if (_qteEvent != null && _qteEvent.CurrentState == QTEEventState.Started) {
+        if (_qteEvent.CurrentState == QTEEventState.Started) {
             _time += Time.deltaTime;
 
             if (_time <= TimeToSwipe)
@@ -49,10 +54,12 @@ public class QTEEventView : UICompanent, IPause, IDisposable {
 
     private void AddListener() {
         _qteEvent.StateChanged += OnStateChanged;
+        _qteEvent.Disabled += OnDisabled;
     }
 
     private void RemoveLisener() {
         _qteEvent.StateChanged -= OnStateChanged;
+        _qteEvent.Disabled -= OnDisabled;
     }
 
     private void OnStateChanged(QTEEventState state) {
@@ -75,15 +82,7 @@ public class QTEEventView : UICompanent, IPause, IDisposable {
     }
 
     private void ShowStartedAnimation() {
-        if (_sequence == null) {
-            _sequence = DOTween.Sequence();
-            _sequence.Append(transform.DOScale(Vector3.one * 1.2f, 0.3f).SetEase(Ease.InOutSine).SetLoops(LoopCount, LoopType.Yoyo)); 
-            
-            _uid = Guid.NewGuid();
-            _sequence.id = _uid;
-        }
-
-        _sequence.Play();
+        _startTween = transform.DOScale(Vector3.one * 1.2f, 0.3f).SetEase(Ease.InOutSine).SetLoops(LoopCount, LoopType.Yoyo);
     }
 
     private void ShowTrueFinishedAnimation() => FinishedAnimation(true);
@@ -91,20 +90,31 @@ public class QTEEventView : UICompanent, IPause, IDisposable {
     private void ShowFallFinishedAnimation() => FinishedAnimation(false);
     
     private void FinishedAnimation(bool status) {
+         _startTween.Kill();
+
+        Sprite resultSprite = status ? _trueResult : _falseResult;
+        _iconImage.sprite = resultSprite;
+
         Color _backgroundColor = status ? Color.green : Color.red;
 
-        DOTween.Kill(_uid);
-        _sequence = null;
+        _finishSequence = DOTween.Sequence();
+        _finishSequence.Append(transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.InOutSine))
+            .Insert(0, _backgroundImage.DOColor(_backgroundColor, 0.3f))
+            .Play();
+    }
 
-        transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.InOutSine);
-        _backgroundImage.DOColor(_backgroundColor, 0.3f);
-        _qteEvent = null;
+    private void OnDisabled() {
+        RemoveLisener();
+
+        _finishSequence.Kill();
     }
 
     public override void Dispose() {
         base.Dispose();
 
         RemoveLisener();
+
+        _qteEvent = null;
         _pauseHandler.Remove(this);
     }
 

@@ -1,6 +1,7 @@
+using System;
 using UnityEngine;
 
-public class Sheep : MonoBehaviour, IPause {
+public class Sheep : MonoBehaviour, IPause, IDisposable {
     private const string IsMove = "IsMove";
     private const string IsJump = "IsJump";
     private const string IsStrike = "IsStrike";
@@ -91,5 +92,10 @@ public class Sheep : MonoBehaviour, IPause {
     private void OnQTESystemAllEventsCompleted(bool qTEResult) {
         _qTEResult = qTEResult;
         _currentSpeed = _moveSpeed;
+    }
+
+    public void Dispose() {     
+        _qTESystem.AllEventsCompleted -= OnQTESystemAllEventsCompleted;
+        _qTESystem = null;
     }
 }
