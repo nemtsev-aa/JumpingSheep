@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnityEngine;
 using Zenject;
 
 public class QTESystem : IPause, ITickable, IDisposable {
@@ -28,7 +27,7 @@ public class QTESystem : IPause, ITickable, IDisposable {
 
         _eventConfigs = new List<QTEEventConfig>();
         _eventConfigs.AddRange(configs.Configs);
-        
+
         _qTESoundManager = qTESoundManager;
         _qTESoundManager.Init(this);
 
@@ -41,12 +40,12 @@ public class QTESystem : IPause, ITickable, IDisposable {
     private int EventsCount => _levelConfig.QTEConfig.EventsCount;
 
     public void SetLevelConfig(LevelConfig config) => _levelConfig = config;
-    
+
     public void StartEvents() {
         CreateEvents();
 
         StartNextEvent();
-        
+
         Started?.Invoke();
     }
 
@@ -65,8 +64,8 @@ public class QTESystem : IPause, ITickable, IDisposable {
 
     private void CreateEvents() {
         for (int i = 0; i < EventsCount; i++) {
-            var index = UnityEngine.Random.Range(0, _eventConfigs.Count); 
-            
+            var index = UnityEngine.Random.Range(0, _eventConfigs.Count);
+
             QTEEventConfig config = _eventConfigs[index];
             config.TimeToSwipe = _levelConfig.QTEConfig.EventDuration;
 
@@ -78,10 +77,10 @@ public class QTESystem : IPause, ITickable, IDisposable {
 
     private void CreateEvent(QTEEventConfig config) {
         QTEEvent newEvent = new QTEEvent(_swipeHandler);
-       
+
         newEvent.Init(config);
         newEvent.StateChanged += OnStateChanged;
-        
+
         _events.Enqueue(newEvent);
     }
 
@@ -89,14 +88,14 @@ public class QTESystem : IPause, ITickable, IDisposable {
         if (_events.Count > 0) {
             _currentEvent = _events.Dequeue();
             _currentEvent.Start();
-           
+
             return;
         }
 
         SummingUpResults(300f);
     }
 
-   private void OnStateChanged(QTEEventState state) {
+    private void OnStateChanged(QTEEventState state) {
         if (state == QTEEventState.Started)
             return;
 
@@ -111,7 +110,7 @@ public class QTESystem : IPause, ITickable, IDisposable {
             ClearEvent(_currentEvent);
         }
 
-        StartNextEvent(); 
+        StartNextEvent();
     }
 
     private async void SummingUpResults(double delay) {

@@ -21,6 +21,14 @@ public class LevelSelectionDialog : Dialog {
         base.Init();
     }
 
+    public override void Show(bool value) {
+        base.Show(value);
+
+        if (value)
+            UpdateLevelSelectionPanel();
+
+    }
+
     public override void InitializationPanels() {
         _levelSelectionPanel = GetPanelByType<LevelSelectionPanel>();
         _levelSelectionPanel.Init(_configs, _factory);
@@ -38,6 +46,8 @@ public class LevelSelectionDialog : Dialog {
         _levelSelectionPanel.LevelSelected -= OnLevelSelected;
     }
 
+    private void UpdateLevelSelectionPanel() => _levelSelectionPanel.ShowCurrentStatuses();
+   
     private void OnLevelSelected(LevelConfig config) {
         LevelStarted?.Invoke(config);
     }

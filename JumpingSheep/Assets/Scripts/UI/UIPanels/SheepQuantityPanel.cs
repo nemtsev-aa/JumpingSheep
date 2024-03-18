@@ -1,18 +1,23 @@
-using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class SheepQuantityPanel : UIPanel {
-    [SerializeField] private SheepIcon _sheepIconPrefab;
+    private const string LevelName = "Уровень ";
+
+    [SerializeField] private TextMeshProUGUI _levelNameLabel;
     [SerializeField] private RectTransform _sheepIconParent;
 
     private List<SheepIcon> _sheepIcons;
 
     private SheepQuantityCounter _counter;
+    private UICompanentsFactory _factory;
     private int _sheepIconQuantity;
 
-    public void Init(SheepQuantityCounter counter) {
+    public void Init(SheepQuantityCounter counter, UICompanentsFactory factory) {
         _counter = counter;
+        _factory = factory;
+
         _sheepIconQuantity = _counter.MaxQuantity;
 
         AddListeners();
@@ -28,7 +33,7 @@ public class SheepQuantityPanel : UIPanel {
 
             ClearSheepIcons();
             _sheepIconQuantity = _counter.MaxQuantity;
-            
+
             CreateIcons();
         }
     }
@@ -39,18 +44,20 @@ public class SheepQuantityPanel : UIPanel {
         if (_sheepIcons != null && _sheepIconQuantity == _counter.MaxQuantity)
             ShowSheepIcons();
         else
-            ClearSheepIcons(); 
+            ClearSheepIcons();
     }
 
     public override void AddListeners() {
         base.AddListeners();
 
+        _counter.LevelNameChanged += OnLevelNameChanged;
         _counter.RemainingQuantityChanged += OnRemainingQuantityChanged;
     }
 
     public override void RemoveListeners() {
         base.RemoveListeners();
 
+        _counter.LevelNameChanged -= OnLevelNameChanged;
         _counter.RemainingQuantityChanged -= OnRemainingQuantityChanged;
     }
 
@@ -58,12 +65,15 @@ public class SheepQuantityPanel : UIPanel {
         _sheepIcons = new List<SheepIcon>();
 
         for (int i = 0; i < _sheepIconQuantity; i++) {
-            SheepIcon newSheepIcon = Instantiate(_sheepIconPrefab, _sheepIconParent);
+            SheepIconConfig config = new SheepIconConfig();
+            SheepIcon newSheepIcon = _factory.Get<SheepIcon>(config, _sheepIconParent);
             newSheepIcon.Show(true);
 
             _sheepIcons.Add(newSheepIcon);
         }
     }
+
+    private void OnLevelNameChanged(string name) => _levelNameLabel.text = $"{LevelName} {name}";
 
     private void OnRemainingQuantityChanged(int value) {
         _sheepIcons[value].Show(false);

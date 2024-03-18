@@ -12,6 +12,8 @@ public class LevelStatusViewConfig : UICompanentConfig {
         StarsCount = starsCount;
     }
 
+    public void SetLevelStatus(LevelStatusTypes status) => CurrentStatus = status;
+
     public override void OnValidate() {
         
     }

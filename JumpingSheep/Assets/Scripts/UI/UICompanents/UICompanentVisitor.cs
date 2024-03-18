@@ -18,4 +18,7 @@ public class UICompanentVisitor : ICompanentVisitor {
 
     public void Visit(QTEEventViewConfig eventViewConfig) 
         => Companent = _companents.FirstOrDefault(companent => companent is QTEEventView);
+
+    public void Visit(SheepIconConfig sheepIconConfig)
+        => Companent = _companents.FirstOrDefault(companent => companent is SheepIcon);
 }

@@ -27,7 +27,7 @@ public class GlobalInstaller : MonoInstaller {
         //BindPointer();
 
         BindFactories();
-        //BindTimeCounter();
+        BindTimeCounter();
         BindSheepSpawner();
         BindInput();
         BindLogger();
@@ -88,6 +88,13 @@ public class GlobalInstaller : MonoInstaller {
 
         QTESoundManager qTESoundManager = Container.InstantiatePrefabForComponent<QTESoundManager>(_qTESoundManager);
         Container.Bind<QTESoundManager>().FromInstance(qTESoundManager).AsSingle();   
+    }
+
+    private void BindTimeCounter() {
+        TimeCounter timeCounter = new TimeCounter();
+
+        Container.BindInstance(timeCounter).AsSingle();
+        Container.BindInterfacesAndSelfTo<ITickable>().FromInstance(timeCounter).AsSingle();
     }
 
     private void BindServices() {

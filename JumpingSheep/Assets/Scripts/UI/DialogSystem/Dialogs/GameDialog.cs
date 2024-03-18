@@ -3,9 +3,11 @@ using System.Threading.Tasks;
 using Zenject;
 
 public class GameDialog : Dialog {
-    public event Action PlayClicked;
     public event Action MainMenuClicked;
     public event Action ResetClicked;
+    public event Action NextLevelClicked;
+
+    public event Action PlayClicked;
     public event Action<bool> PauseClicked;
     public event Action LearningClicked;
 
@@ -43,7 +45,7 @@ public class GameDialog : Dialog {
         _score = score;
 
         _resultPanel.Init(_score);
-        _sheepQuantityPanel.Init(_counter);
+        _sheepQuantityPanel.Init(_counter, _factory);
 
         _qTEEventsPanel.Init(_qTESystem, _pauseHandler, _factory);
     }
@@ -76,8 +78,9 @@ public class GameDialog : Dialog {
         _learningPanel.PlayButtonClicked += OnPlayClicked;
         _learningPanel.MainMenuButtonClicked += OnMainMenuClick;
 
-        _resultPanel.ResetButtonClicked += OnResetClicked;
         _resultPanel.MainMenuButtonClicked += OnMainMenuClick;
+        _resultPanel.ResetButtonClicked += OnResetClicked;
+        _resultPanel.NextLevelClicked += OnNextLevelClicked;
     }
 
     public override void RemoveListeners() {
@@ -99,8 +102,9 @@ public class GameDialog : Dialog {
         _learningPanel.PlayButtonClicked -= OnPlayClicked;
         _learningPanel.MainMenuButtonClicked -= OnMainMenuClick;
         
-        _resultPanel.ResetButtonClicked -= OnResetClicked;
         _resultPanel.MainMenuButtonClicked -= OnMainMenuClick;
+        _resultPanel.ResetButtonClicked -= OnResetClicked;
+        _resultPanel.NextLevelClicked -= OnNextLevelClicked;
     }
 
     public override void ResetPanels() {
@@ -153,6 +157,11 @@ public class GameDialog : Dialog {
         PauseClicked?.Invoke(true);
     }
 
+    private void OnMainMenuClick() {
+        ResetPanels();
+        MainMenuClicked?.Invoke();
+    }
+
     private void OnResetClicked() {
         ResetPanels();
 
@@ -162,9 +171,8 @@ public class GameDialog : Dialog {
         ResetClicked?.Invoke();
     }
 
-    private void OnMainMenuClick() {
-        ResetPanels();
-        MainMenuClicked?.Invoke();
+    private void OnNextLevelClicked() {
+        NextLevelClicked?.Invoke();
     }
 
     private void OnQTESystemStarted() {
@@ -178,12 +186,11 @@ public class GameDialog : Dialog {
     private void OnQTESystemAllEventsCompleted(bool value) {
         ShowInnerGlowPanel(false);
 
-        HideqTEEventsPanel();
+        HideQTEEventsPanel();
         _navigationPanel.Show(true);
     }
 
-    private async Task HideqTEEventsPanel() {
-
+    private async Task HideQTEEventsPanel() {
         await Task.Delay(TimeSpan.FromSeconds(2));
         _qTEEventsPanel.Show(false);
     }

@@ -9,13 +9,16 @@ public class ResultPanel : UIPanel {
 
     public event Action MainMenuButtonClicked;
     public event Action ResetButtonClicked;
+    public event Action NextLevelClicked;
 
     [SerializeField] private Transform _starIconsParent;
-
     [SerializeField] private TextMeshProUGUI _resultLabel;
     [SerializeField] private TextMeshProUGUI _scoreText;
-    [SerializeField] private Button _resetButton;
+
+    [Space(10), Header("Buttons")]
     [SerializeField] private Button _mainMenuButton;
+    [SerializeField] private Button _resetButton;
+    [SerializeField] private Button _nextLevelButton;
 
     private Score _score;
     private Sequence _mySequence;
@@ -46,6 +49,7 @@ public class ResultPanel : UIPanel {
 
         _resetButton.onClick.AddListener(ResetButtonClick);
         _mainMenuButton.onClick.AddListener(MainMenuButtonClick);
+        _nextLevelButton.onClick.AddListener(NextLevelClick);
     }
 
     public override void RemoveListeners() {
@@ -55,6 +59,7 @@ public class ResultPanel : UIPanel {
 
         _resetButton.onClick.RemoveListener(ResetButtonClick);
         _mainMenuButton.onClick.RemoveListener(MainMenuButtonClick);
+        _nextLevelButton.onClick.RemoveListener(NextLevelClick);
     }
 
     private void OnScoreChanged() {
@@ -65,6 +70,8 @@ public class ResultPanel : UIPanel {
     private void MainMenuButtonClick() => MainMenuButtonClicked?.Invoke();
 
     private void ResetButtonClick() => ResetButtonClicked?.Invoke();
+
+    private void NextLevelClick() => NextLevelClicked?.Invoke();
 
     private void ShowAnimation() {
         for (int i = 0; i < _starIconsParent.childCount; i++) {

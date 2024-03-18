@@ -1,11 +1,14 @@
 using System.Collections.Generic;
-using TMPro;
+using System.Threading.Tasks;
 using UnityEngine;
 using DG.Tweening;
-using System.Threading.Tasks;
 using System;
+using TMPro;
 
 public class QTEEventsPanel : UIPanel {
+    public const string TrueResultLabelText = "Успех";
+    public const string FalseResultLabelText = "Неудача";
+
     [SerializeField] private RectTransform _qTEEventViewsParent;
     [SerializeField] private TextMeshProUGUI _resoverallResultsultText;
 
@@ -33,11 +36,9 @@ public class QTEEventsPanel : UIPanel {
 
         if (value)
             _resoverallResultsultText.text = "";
-        else {
 
-            if (_finishSequence != null) 
-                _finishSequence.Kill();
-        }
+        if (_finishSequence != null)
+            _finishSequence.Kill();
     }
 
     public override void Reset() {
@@ -106,7 +107,7 @@ public class QTEEventsPanel : UIPanel {
     private void FinishedAnimation(bool status) {
         _qTEEventViewsParent.gameObject.SetActive(false);
 
-        string text = status ? "Успех" : "Неудача";
+        string text = status ? TrueResultLabelText : FalseResultLabelText;
         _resoverallResultsultText.text = text;
 
         Color textColor = status ? Color.green : Color.red;

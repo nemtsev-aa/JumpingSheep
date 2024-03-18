@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using Zenject;
 
@@ -6,6 +7,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private PauseHandler _pauseHandler;
     private SheepSpawner _spawner;
     private SheepQuantityCounter _sheepCounter;
+    private LevelConfigs _configs;
     private UIManager _uIManager;
     private DialogSwitcher _dialogSwitcher;
     private EnvironmentSoundManager _environmentSound;
@@ -23,12 +25,16 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private AboutDialog AboutDialog => _uIManager.AboutDialog;
 
     [Inject]
-    public void Construct(PauseHandler pauseHandler, SheepSpawner spawner, QTESystem qTESystem, Score score, SheepQuantityCounter sheepCounter) {
+    public void Construct(PauseHandler pauseHandler, SheepSpawner spawner,
+                          QTESystem qTESystem, Score score, SheepQuantityCounter sheepCounter,
+                          LevelConfigs configs) {
+
         _pauseHandler = pauseHandler;
         _spawner = spawner;
         _qTESystem = qTESystem;
         _score = score;
         _sheepCounter = sheepCounter;
+        _configs = configs;
     }
 
     public void Init(UIManager uIManager, EnvironmentSoundManager environmentSound) {
@@ -42,6 +48,11 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     public void SetPause(bool isPaused) => _pauseHandler.SetPause(isPaused);
 
+    public void Reset() {
+        _sheepCounter.Reset();
+        _qTESystem.Reset();
+        _sheepOver = false;
+    }
 
     #region Switching Dialogs
 
@@ -80,6 +91,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         GameDialog.PauseClicked += OnPauseClicked;
         GameDialog.LearningClicked += OnLearningClicked;
         GameDialog.SettingsClicked += OnSettingsClicked;
+        GameDialog.NextLevelClicked += OnNextLevelClicked;
 
         _spawner.SheepCreated += OnSheepCreated;
         _sheepCounter.SheepIsOver += OnSheepIsOver;
@@ -99,6 +111,8 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         GameDialog.PlayClicked -= StartGameplay;
         GameDialog.ResetClicked -= OnResetClicked;
         GameDialog.MainMenuClicked -= OnMainMenuClicked;
+        GameDialog.NextLevelClicked -= OnNextLevelClicked;
+
         GameDialog.PauseClicked -= OnPauseClicked;
         GameDialog.LearningClicked -= OnLearningClicked;
         GameDialog.SettingsClicked -= OnSettingsClicked;
@@ -165,9 +179,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         StartGameplay();
     }
 
-    private void OnQTESystemEventFinished(bool result) {
-        _score.SetSwipeResult(result);
-    }
+    private void OnQTESystemEventFinished(bool result) => _score.SetSwipeResult(result);
 
     private void OnPauseClicked(bool value) => SetPause(value);
 
@@ -185,12 +197,21 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         else
             _dialogSwitcher.ShowPreviousDialog();
     }
-
+    
+    private void OnMainMenuClicked() {
+        FinishGameplay();
+        ShowMainMenuDialog();
+    }
+    
     private void OnResetClicked() {
-        _sheepCounter.Reset();
-        _qTESystem.Reset();
-        _sheepOver = false;
+        FinishGameplay();
+        OnLevelStarted(_currentLevelConfig);
+    }
 
+    private void OnNextLevelClicked() {
+        FinishGameplay();
+
+        _currentLevelConfig = GetLevelConfigByStatus(LevelStatusTypes.Ready);
         OnLevelStarted(_currentLevelConfig);
     }
 
@@ -201,18 +222,36 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _spawner.CreateSheep(_currentLevelConfig.Color);
     }
 
-    private void OnMainMenuClicked() {
-        _sheepCounter.Reset();
-        _qTESystem.Reset();
-        _sheepOver = false;
+    private void FinishGameplay() {
+        if (_score.StarsCount > 0) {
+            int sratsCount = Mathf.Max(_currentLevelConfig.StarsCount, _score.StarsCount);
+            _currentLevelConfig.StarsCount = sratsCount;
 
+            _currentLevelConfig.SetStatus(LevelStatusTypes.Complited);
+            UnlockLevel();
+        }
 
-        ShowMainMenuDialog();
+        Reset();
     }
 
-    private void SetStarsCount() {
-        _currentLevelConfig.StarsCount = _score.StarsCount;
-        _currentLevelConfig.Status = LevelStatusTypes.Complited;
+    private void UnlockLevel() {
+        int index = _configs.Configs.IndexOf(_currentLevelConfig) + 1;
+        
+        if (index > _configs.Configs.Count) {
+            ShowMainMenuDialog();
+        }
+        else 
+        {
+            var level = _configs.Configs[index];
+
+            if (level.Status == LevelStatusTypes.Locked) {
+                level.SetStatus(LevelStatusTypes.Ready);
+            }
+        }
+    }
+
+    private LevelConfig GetLevelConfigByStatus(LevelStatusTypes status) {
+        return _configs.Configs.First(config => config.Status == status);
     }
 
     public void Dispose() {

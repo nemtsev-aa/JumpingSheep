@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,18 +23,18 @@ public class LevelStatusView : UICompanent {
     [SerializeField] private Transform _starsParent;
     [SerializeField] private Transform _lockParent;
     [SerializeField] private Button _button;
-    
+
     private LevelStatusViewConfig _config;
-    
+
     public string Name => _config.Name;
+    public LevelStatusTypes Status => _config.CurrentStatus;
 
     public void Init(LevelStatusViewConfig config) {
         _config = config;
 
         SetStatus(_config.CurrentStatus);
 
-        if (_config.CurrentStatus == LevelStatusTypes.Ready)
-            AddListeners();
+        AddListeners();
     }
 
     public void SetStatus(LevelStatusTypes status) {
@@ -44,7 +42,7 @@ public class LevelStatusView : UICompanent {
             ShowLockedStatus();
             return;
         }
-            
+
         if (status == LevelStatusTypes.Ready) {
             ShowReadyStatus();
             return;
@@ -61,6 +59,8 @@ public class LevelStatusView : UICompanent {
         _starsParent.gameObject.SetActive(false);
         _lockParent.gameObject.SetActive(false);
         _nameText.text = _config.Name;
+
+        _config.SetLevelStatus(LevelStatusTypes.Ready);
     }
 
     private void ShowLockedStatus() {
@@ -68,15 +68,19 @@ public class LevelStatusView : UICompanent {
         _starsParent.gameObject.SetActive(false);
         _lockParent.gameObject.SetActive(true);
         _nameText.text = "";
+
+        _config.SetLevelStatus(LevelStatusTypes.Locked);
     }
 
     private void ShowCompletedStatus() {
         _backgroundImage.sprite = _complited;
-        
+
         ShowStars();
 
         _lockParent.gameObject.SetActive(false);
         _nameText.text = _config.Name;
+
+        _config.SetLevelStatus(LevelStatusTypes.Complited);
     }
 
     private void ShowStars() {

@@ -20,16 +20,9 @@ public class LevelSelectionPanel : UIPanel {
         CreateLevelStatusViews();
     }
 
-    public void SetComplitedStatus(LevelConfig config) {
-        LevelStatusView view = _views.First(config => config.Name == config.Name);
-
-        view.SetStatus(LevelStatusTypes.Complited);
-    }
-
     public override void Reset() {
         base.Reset();
 
-        
     }
 
     public override void RemoveListeners() {
@@ -39,7 +32,6 @@ public class LevelSelectionPanel : UIPanel {
             iView.Selected -= LevelViewSelected;
         }
     }
-
 
     private void CreateLevelStatusViews() {
         _views = new List<LevelStatusView>();
@@ -52,6 +44,15 @@ public class LevelSelectionPanel : UIPanel {
             newLevelView.Selected += LevelViewSelected;
 
             _views.Add(newLevelView);
+        }
+    }
+
+    public void ShowCurrentStatuses() {
+        foreach (var iConfig in _configs) {
+            LevelStatusView view = _views.First(config => config.Name == iConfig.Name);
+
+            if (iConfig.Status != view.Status)
+                view.SetStatus(iConfig.Status);
         }
     }
 

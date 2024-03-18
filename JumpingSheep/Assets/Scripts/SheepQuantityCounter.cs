@@ -1,6 +1,7 @@
 using System;
 
 public class SheepQuantityCounter {
+    public event Action<string> LevelNameChanged;
     public event Action<int> RemainingQuantityChanged;
     public event Action SheepIsOver;
 
@@ -18,6 +19,8 @@ public class SheepQuantityCounter {
 
         MaxQuantity = _levelConfig.SheepCount;
         _remainingQuantity = MaxQuantity;
+
+        LevelNameChanged?.Invoke(_levelConfig.Name);
     }
 
     public void TakeSheep() {
