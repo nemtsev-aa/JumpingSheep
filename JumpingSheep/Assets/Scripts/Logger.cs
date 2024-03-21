@@ -9,9 +9,10 @@ public class Logger {
     public void Log(string message) {
         Debug.Log(message);
 
-        StreamWriter writer = new StreamWriter(GetLogsPath(), true);
-        writer.WriteLine(message);
-        writer.Close();
+        using (var writer = new StreamWriter(GetLogsPath(), true)) {
+            writer.WriteLine(message);
+            writer.Close();
+        }
     }
 
     string GetLogsPath() {

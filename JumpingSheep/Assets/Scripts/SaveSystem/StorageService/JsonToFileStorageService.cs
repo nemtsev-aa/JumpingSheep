@@ -1,13 +1,17 @@
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
 public class JsonToFileStorageService : IStorageService {
     private string _path;
+    private Logger _logger;
 
-    public void Init(string path) {
+    public JsonToFileStorageService(Logger logger) {
+        _logger = logger;
+    }
+
+    public void SetPath(string path) {
         _path = path;
     }
 
@@ -18,21 +22,30 @@ public class JsonToFileStorageService : IStorageService {
         //                new JsonSerializerSettings() {
         //                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
         //                });
+        _logger.Log(json);
 
-        if (File.Exists(savePath)) {
-            using (var fileStream = new StreamWriter(savePath)) {
-                fileStream.Write(json);
+        try {
+            if (File.Exists(savePath))
+                File.Delete(savePath);
+
+            using (var writer = new StreamWriter(savePath, true)) {
+                writer.Write(json);
+                writer.Close();
             }
-        }
 
-#if UNITY_EDITOR
-        Debug.Log($"Data saved to Json successfully: {savePath}");
-        callback?.Invoke(true);
-#endif
+            _logger.Log($"Data saved to Json successfully: {savePath}");
+            callback?.Invoke(true);
+        }
+        catch (Exception e) {
+            _logger.Log($"Data saved to Json invalid: {e.Message}");
+        }
     }
 
     public void Load<T>(string key, Action<T> callback) {
         string savePath = BuildPath(key);
+
+        if (File.Exists(savePath) == false)
+            return;
 
         using (var fileStream = new StreamReader(savePath)) {
             var json = fileStream.ReadToEnd();
@@ -43,6 +56,6 @@ public class JsonToFileStorageService : IStorageService {
     }
 
     private string BuildPath(string key) {
-        return Path.Combine(_path, key + ".json");
+        return Application.persistentDataPath + $"/{key}.json";
     }
 }

@@ -12,13 +12,15 @@ public class SavesManager : IService, IDisposable {
     private static string _savePath = Application.persistentDataPath;
 
     private SaveType _currentSaveType = SaveType.Binary;
+    private Logger _logger;
     private Dictionary<SaveType, IStorageService> _saveServices = new Dictionary<SaveType, IStorageService>();
 
-    public SavesManager(SaveManagerConfig _config) {
+    public SavesManager(SaveManagerConfig _config, Logger logger) {
         if (_config.SavePath != "")
             _savePath = _config.SavePath;
 
         _currentSaveType = _config.SaveType;
+        _logger = logger;
 
         InitializationServices();
     }
@@ -51,18 +53,18 @@ public class SavesManager : IService, IDisposable {
 
         if (File.Exists(path)) {
             File.Delete(path);
-            Debug.Log("SavesManager: DeleteFile - Deleted");
-        } 
-        else
-            Debug.LogError("SavesManager: DeleteFile - No file");
+            _logger.Log("SavesManager: DeleteFile - Deleted");
+        }
+        else 
+            _logger.Log("SavesManager: DeleteFile - No file");
     }
 
     private void InitializationServices() {
-        _saveServices.Add(SaveType.Binary, new BinaryToFileStorageService());
-        _saveServices.Add(SaveType.Json, new JsonToFileStorageService());
+        _saveServices.Add(SaveType.Binary, new BinaryToFileStorageService(_logger));
+        _saveServices.Add(SaveType.Json, new JsonToFileStorageService(_logger));
 
         foreach (var iService in _saveServices) {
-            iService.Value.Init(_savePath);
+            iService.Value.SetPath(_savePath);
         }
     }
 

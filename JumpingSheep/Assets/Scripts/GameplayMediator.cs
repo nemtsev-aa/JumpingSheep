@@ -10,6 +10,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private SheepQuantityCounter _sheepCounter;
     private LevelConfigs _configs;
     private ProgressLoader _progressLoader;
+    private Logger _logger;
     private UIManager _uIManager;
     private DialogSwitcher _dialogSwitcher;
     private EnvironmentSoundManager _environmentSound;
@@ -31,7 +32,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     [Inject]
     public void Construct(PauseHandler pauseHandler, SheepSpawner spawner,
                           QTESystem qTESystem, Score score, SheepQuantityCounter sheepCounter,
-                          LevelConfigs configs, ProgressLoader progressLoader) {
+                          LevelConfigs configs, ProgressLoader progressLoader, Logger logger) {
 
         _pauseHandler = pauseHandler;
         _spawner = spawner;
@@ -40,9 +41,12 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _sheepCounter = sheepCounter;
         _configs = configs;
         _progressLoader = progressLoader;
+        _logger = logger;
     }
 
     public void Init(UIManager uIManager, EnvironmentSoundManager environmentSound) {
+        UpdateLevelProgress();
+
         _uIManager = uIManager;
         _environmentSound = environmentSound;
 
@@ -83,6 +87,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private void AddListener() {
         SettingsDialog.BackClicked += OnSettingsDialogBackClicked;
         AboutDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
+        LevelSelectionDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
 
         MainMenuDialog.SettingsDialogShowed += ShowSettings;
         MainMenuDialog.LevelSelectDialogShowed += ShowLevelSelectionDialog;
@@ -106,6 +111,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private void RemoveLisener() {
         SettingsDialog.BackClicked -= OnSettingsDialogBackClicked;
         AboutDialog.BackClicked -= _dialogSwitcher.ShowPreviousDialog;
+        LevelSelectionDialog.BackClicked -= _dialogSwitcher.ShowPreviousDialog;
 
         MainMenuDialog.SettingsDialogShowed -= ShowSettings;
         MainMenuDialog.LevelSelectDialogShowed -= ShowLevelSelectionDialog;
@@ -173,11 +179,11 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     #endregion
 
-    private void UpdateLevelConfigs() {
+    private void UpdateLevelProgress() {
         var progressDataList = _progressLoader.LevelProgress;
 
-        if (progressDataList.Count == 0) {
-            Debug.LogError($"List of LevelProgress is empty");
+        if (progressDataList == null || progressDataList.Count == 0) {
+            _logger.Log($"List of LevelProgress is empty");
             return;
         }
 
@@ -186,7 +192,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
             var progress = config.Progress;
 
             if (iProgress.Equals(progress) == false)
-                config.SetCurrentProgress(progress);
+                config.SetCurrentProgress(iProgress);
         }
     }
 
@@ -233,10 +239,9 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private void OnNextLevelClicked() {
         FinishGameplay();
 
-        _currentLevelConfig = GetLevelConfigByStatus(LevelStatusTypes.Ready);
         OnLevelStarted(_currentLevelConfig);
     }
-
+    
     private void StartGameplay() {
         ShowGameplayDialog();
 
@@ -245,16 +250,16 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     private void FinishGameplay() {
-        if (_score.StarsCount > 0) {
+        int starsCount = _score.StarsCount;
+
+        if (starsCount > 0) {
             _currentLevelConfig.Progress.SetStatus(LevelStatusTypes.Complited);
 
-            var sratsCount = _score.StarsCount;
-            if (_score.StarsCount > _currentLevelConfig.Progress.StarsCount) {
-                _currentLevelConfig.Progress.SetStarsCount(sratsCount);
-                SaveProgress();
-            }
-
-            UnlockLevel(); 
+            if (starsCount > _currentLevelConfig.Progress.StarsCount) 
+                _currentLevelConfig.Progress.SetStarsCount(starsCount);
+            
+            UnlockLevel();
+            SaveProgress();
         }
 
         Reset();
@@ -283,6 +288,8 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
             if (level.Progress.Status == LevelStatusTypes.Locked) 
                 level.Progress.SetStatus(LevelStatusTypes.Ready);
+
+            _currentLevelConfig = level;
         }
     }
 

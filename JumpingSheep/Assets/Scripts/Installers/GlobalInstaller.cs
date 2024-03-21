@@ -107,12 +107,7 @@ public class GlobalInstaller : MonoInstaller {
             _saveConfig.SetPath(Application.persistentDataPath);
 
         Container.BindInstance(_saveConfig).AsSingle();
-
-        SavesManager save = new SavesManager(_saveConfig);
-        Container.BindInstance(save).AsSingle();
-
-        ProgressLoader loader = new ProgressLoader(save);
-        Container.BindInstance(loader).AsSingle();
+        Container.Bind<SavesManager>().AsSingle();
+        Container.Bind<ProgressLoader>().AsSingle();
     }
-
 }

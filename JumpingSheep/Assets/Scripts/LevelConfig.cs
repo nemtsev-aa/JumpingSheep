@@ -9,5 +9,4 @@ public class LevelConfig {
     [field: SerializeField] public QTESystemConfig QTEConfig { get; private set; }
 
     public void SetCurrentProgress(LevelProgressData progress) => Progress = progress;
-   
 }

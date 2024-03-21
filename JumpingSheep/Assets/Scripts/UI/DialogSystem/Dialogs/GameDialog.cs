@@ -178,9 +178,9 @@ public class GameDialog : Dialog {
 
     private void OnQTESystemAllEventsCompleted(bool value) {
         ShowInnerGlowPanel(false);
+        _navigationPanel.Show(true);
 
         HideQTEEventsPanel();
-        _navigationPanel.Show(true);
     }
 
     private async Task HideQTEEventsPanel() {
