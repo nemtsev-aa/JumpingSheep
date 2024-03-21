@@ -8,11 +8,11 @@ public class LevelConfigs : ScriptableObject {
     [ContextMenu(nameof(ResetProgress))]
     public void ResetProgress() {
         foreach (var iConfig in Configs) {
-            iConfig.SetStatus(LevelStatusTypes.Locked);
-            iConfig.StarsCount = 0;
+            iConfig.Progress.SetStatus(LevelStatusTypes.Locked);
+            iConfig.Progress.SetStarsCount(0);
         }
 
-        Configs[0].SetStatus(LevelStatusTypes.Ready);
-        Configs[0].StarsCount = 0;
+        Configs[0].Progress.SetStatus(LevelStatusTypes.Ready);
+        Configs[0].Progress.SetStarsCount(0);
     }
 }

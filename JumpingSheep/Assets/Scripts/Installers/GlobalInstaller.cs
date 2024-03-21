@@ -10,6 +10,8 @@ public class GlobalInstaller : MonoInstaller {
 
     [SerializeField] private UICompanentPrefabs _uiCompanentPrefabs;
     [SerializeField] private LevelConfigs _levelConfig;
+    [SerializeField] private SaveManagerConfig _saveConfig;
+
     
     //[SerializeField] private DifficultyLevelsConfig _difficultyLevelsConfig;
     //[SerializeField] private QuestionsConfig _questionsConfig;
@@ -20,8 +22,8 @@ public class GlobalInstaller : MonoInstaller {
 
     public override void InstallBindings() {
         BindServices();
-        BindPauseHandler();
-        BindConfigs();
+        BindSaveManager();
+        BindLevelConfigs();
         BindUICompanentsConfig();
 
         //BindPointer();
@@ -32,13 +34,16 @@ public class GlobalInstaller : MonoInstaller {
         BindInput();
         BindLogger();
         BindQTESystemCompanents();
+        
     }
 
-    public void BindPauseHandler() {
+    private void BindServices() {
+        Container.Bind<SheepQuantityCounter>().AsSingle();
+        Container.Bind<Score>().AsSingle();
         Container.BindInterfacesAndSelfTo<PauseHandler>().AsSingle();
     }
 
-    private void BindConfigs() {
+    private void BindLevelConfigs() {
         if (_levelConfig.Configs.Count == 0)
             Debug.LogError($"List of LevelConfig is empty");
 
@@ -74,8 +79,8 @@ public class GlobalInstaller : MonoInstaller {
 
     private void BindSheepSpawner() {
         Transform spawnPoint = Container.InstantiatePrefabForComponent<Transform>(_spawnPoint);
+        
         Container.Bind<Transform>().FromInstance(spawnPoint).AsSingle();
-
         Container.Bind<SheepSpawner>().AsSingle();
     }
 
@@ -97,8 +102,17 @@ public class GlobalInstaller : MonoInstaller {
         Container.BindInterfacesAndSelfTo<ITickable>().FromInstance(timeCounter).AsSingle();
     }
 
-    private void BindServices() {
-        Container.Bind<SheepQuantityCounter>().AsSingle();
-        Container.Bind<Score>().AsSingle();
+    private void BindSaveManager() {
+        if (_saveConfig.SavePath == "")
+            _saveConfig.SetPath(Application.persistentDataPath);
+
+        Container.BindInstance(_saveConfig).AsSingle();
+
+        SavesManager save = new SavesManager(_saveConfig);
+        Container.BindInstance(save).AsSingle();
+
+        ProgressLoader loader = new ProgressLoader(save);
+        Container.BindInstance(loader).AsSingle();
     }
+
 }

@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using Zenject;
 
 public class ResultPanel : UIPanel {
     public const string ResultLabelText = "Ñ÷¸ò";
@@ -23,9 +24,12 @@ public class ResultPanel : UIPanel {
     private Score _score;
     private Sequence _mySequence;
 
-    public void Init(Score score) {
+    [Inject]
+    public void Constuct(Score score) {
         _score = score;
+    }
 
+    public void Init() {
         AddListeners();
     }
 

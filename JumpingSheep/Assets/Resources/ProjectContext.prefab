@@ -83,3 +83,4 @@ MonoBehaviour:
   _uiCompanentPrefabs: {fileID: 11400000, guid: e64b8fe4668ccfc498e684cc29bcce71,
     type: 2}
   _levelConfig: {fileID: 11400000, guid: 7b693702e261fc1469432e3b04121afe, type: 2}
+  _saveConfig: {fileID: 11400000, guid: fcb667970c139d447af7fb9d685fd2e9, type: 2}

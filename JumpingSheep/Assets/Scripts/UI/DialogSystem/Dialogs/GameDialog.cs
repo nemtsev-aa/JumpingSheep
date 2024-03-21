@@ -15,7 +15,6 @@ public class GameDialog : Dialog {
     private UICompanentsFactory _factory;
     private SheepQuantityCounter _counter;
     private QTESystem _qTESystem;
-    private Score _score;
 
     private LearningPanel _learningPanel;
     private SheepQuantityPanel _sheepQuantityPanel;
@@ -24,11 +23,9 @@ public class GameDialog : Dialog {
     private InnerGlowPanel _innerGlowPanel;
     private NavigationPanel _navigationPanel;
     private PausePanel _pausePanel;
-    
-    private bool IsPaused => _pauseHandler.IsPaused;
-    
+
     [Inject]
-    public void Constuct(PauseHandler pauseHandler, UICompanentsFactory factory, SheepQuantityCounter sheepCounter, QTESystem qTESystem, Score score) {
+    public void Constuct(PauseHandler pauseHandler, UICompanentsFactory factory, SheepQuantityCounter sheepCounter, QTESystem qTESystem) {
         _pauseHandler = pauseHandler;
         _factory = factory;
 
@@ -42,9 +39,8 @@ public class GameDialog : Dialog {
 
         _counter = sheepCounter;
         _qTESystem = qTESystem;
-        _score = score;
 
-        _resultPanel.Init(_score);
+        _resultPanel.Init();
         _sheepQuantityPanel.Init(_counter, _factory);
 
         _qTEEventsPanel.Init(_qTESystem, _pauseHandler, _factory);
@@ -84,10 +80,7 @@ public class GameDialog : Dialog {
     }
 
     public override void RemoveListeners() {
-        base.RemoveListeners();
-
-        _counter.SheepIsOver -= OnSheepIsOver;
-
+        base.RemoveListeners();   
         _qTESystem.Started -= OnQTESystemStarted;
         _qTESystem.AllEventsCompleted -= OnQTESystemAllEventsCompleted;
 

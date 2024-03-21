@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zenject;
@@ -8,6 +9,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private SheepSpawner _spawner;
     private SheepQuantityCounter _sheepCounter;
     private LevelConfigs _configs;
+    private ProgressLoader _progressLoader;
     private UIManager _uIManager;
     private DialogSwitcher _dialogSwitcher;
     private EnvironmentSoundManager _environmentSound;
@@ -15,6 +17,8 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private LevelConfig _currentLevelConfig;
     private QTESystem _qTESystem;
     private Score _score;
+
+
     private Sheep _currentSheep;
     private bool _sheepOver;
 
@@ -27,7 +31,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     [Inject]
     public void Construct(PauseHandler pauseHandler, SheepSpawner spawner,
                           QTESystem qTESystem, Score score, SheepQuantityCounter sheepCounter,
-                          LevelConfigs configs) {
+                          LevelConfigs configs, ProgressLoader progressLoader) {
 
         _pauseHandler = pauseHandler;
         _spawner = spawner;
@@ -35,6 +39,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _score = score;
         _sheepCounter = sheepCounter;
         _configs = configs;
+        _progressLoader = progressLoader;
     }
 
     public void Init(UIManager uIManager, EnvironmentSoundManager environmentSound) {
@@ -168,6 +173,23 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     #endregion
 
+    private void UpdateLevelConfigs() {
+        var progressDataList = _progressLoader.LevelProgress;
+
+        if (progressDataList.Count == 0) {
+            Debug.LogError($"List of LevelProgress is empty");
+            return;
+        }
+
+        foreach (var iProgress in progressDataList) {
+            var config = _configs.Configs.First(progress => progress.Progress.Name == iProgress.Name);
+            var progress = config.Progress;
+
+            if (iProgress.Equals(progress) == false)
+                config.SetCurrentProgress(progress);
+        }
+    }
+
     private void OnLevelStarted(LevelConfig config) {
         if (_currentLevelConfig != config)
             _currentLevelConfig = config;
@@ -224,14 +246,29 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     private void FinishGameplay() {
         if (_score.StarsCount > 0) {
-            int sratsCount = Mathf.Max(_currentLevelConfig.StarsCount, _score.StarsCount);
-            _currentLevelConfig.StarsCount = sratsCount;
+            _currentLevelConfig.Progress.SetStatus(LevelStatusTypes.Complited);
 
-            _currentLevelConfig.SetStatus(LevelStatusTypes.Complited);
-            UnlockLevel();
+            var sratsCount = _score.StarsCount;
+            if (_score.StarsCount > _currentLevelConfig.Progress.StarsCount) {
+                _currentLevelConfig.Progress.SetStarsCount(sratsCount);
+                SaveProgress();
+            }
+
+            UnlockLevel(); 
         }
 
         Reset();
+    }
+
+    private void SaveProgress() {
+        List<LevelProgressData> data = new List<LevelProgressData>();
+
+        foreach (var iLevelConfig in _configs.Configs) {
+            LevelProgressData progress = iLevelConfig.Progress;
+            data.Add(progress);
+        }
+
+        _progressLoader.SaveLevelProgress(data);
     }
 
     private void UnlockLevel() {
@@ -244,14 +281,13 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         {
             var level = _configs.Configs[index];
 
-            if (level.Status == LevelStatusTypes.Locked) {
-                level.SetStatus(LevelStatusTypes.Ready);
-            }
+            if (level.Progress.Status == LevelStatusTypes.Locked) 
+                level.Progress.SetStatus(LevelStatusTypes.Ready);
         }
     }
 
     private LevelConfig GetLevelConfigByStatus(LevelStatusTypes status) {
-        return _configs.Configs.First(config => config.Status == status);
+        return _configs.Configs.First(config => config.Progress.Status == status);
     }
 
     public void Dispose() {

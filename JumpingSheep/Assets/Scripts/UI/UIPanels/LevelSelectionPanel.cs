@@ -37,7 +37,8 @@ public class LevelSelectionPanel : UIPanel {
         _views = new List<LevelStatusView>();
 
         foreach (var iConfig in _configs) {
-            LevelStatusViewConfig newConfig = new LevelStatusViewConfig(iConfig.Name, iConfig.Status, iConfig.StarsCount);
+            LevelProgressData data = iConfig.Progress;
+            LevelStatusViewConfig newConfig = new LevelStatusViewConfig(data.Name, data.Status, data.StarsCount);
             LevelStatusView newLevelView = _factory.Get<LevelStatusView>(newConfig, _levelSelectionViewParent);
 
             newLevelView.Init(newConfig);
@@ -49,15 +50,15 @@ public class LevelSelectionPanel : UIPanel {
 
     public void ShowCurrentStatuses() {
         foreach (var iConfig in _configs) {
-            LevelStatusView view = _views.First(config => config.Name == iConfig.Name);
+            LevelStatusView view = _views.First(config => config.Name == iConfig.Progress.Name);
 
-            if (iConfig.Status != view.Status)
-                view.SetStatus(iConfig.Status);
+            if (iConfig.Progress.Status != view.Status)
+                view.SetStatus(iConfig.Progress.Status);
         }
     }
 
     private void LevelViewSelected(string name) {
-        LevelConfig levelConfig = _configs.First(config => config.Name == name);
+        LevelConfig levelConfig = _configs.First(config => config.Progress.Name == name);
         LevelStatusView view = _views.First(config => config.Name == name);
 
         LevelSelected?.Invoke(levelConfig);
