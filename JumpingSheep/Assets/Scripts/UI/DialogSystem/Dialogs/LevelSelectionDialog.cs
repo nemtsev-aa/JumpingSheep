@@ -4,16 +4,14 @@ using Zenject;
 public class LevelSelectionDialog : Dialog {
     public event Action<LevelConfig> LevelStarted;
 
-    private Logger _logger;
     private LevelConfigs _configs;
     private UICompanentsFactory _factory;
 
     private LevelSelectionPanel _levelSelectionPanel;
 
     [Inject]
-    public void Construct(Logger logger, UICompanentsFactory factory, LevelConfigs configs) {
+    public void Construct(UICompanentsFactory factory, LevelConfigs configs) {
         _factory = factory;
-        _logger = logger;
         _configs = configs;
     }
 
@@ -48,12 +46,10 @@ public class LevelSelectionDialog : Dialog {
 
     private void UpdateLevelSelectionPanel() => _levelSelectionPanel.ShowCurrentStatuses();
    
-    private void OnLevelSelected(LevelConfig config) {
-        LevelStarted?.Invoke(config);
-    }
+    private void OnLevelSelected(LevelConfig config) => LevelStarted?.Invoke(config);
+    
 
     public override void ResetPanels() {
         base.ResetPanels();
-
     }
 }

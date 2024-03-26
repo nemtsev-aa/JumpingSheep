@@ -5,7 +5,8 @@ using UnityEngine;
 
 public enum SaveType {
     Binary,
-    Json
+    Json,
+    Cloud
 };
 
 public class SavesManager : IService, IDisposable {
@@ -60,6 +61,7 @@ public class SavesManager : IService, IDisposable {
     private void InitializationServices() {
         _saveServices.Add(SaveType.Binary, new BinaryToFileStorageService());
         _saveServices.Add(SaveType.Json, new JsonToFileStorageService());
+        _saveServices.Add(SaveType.Cloud, new CloudToFileStorageService());
 
         foreach (var iService in _saveServices) {
             iService.Value.Init(_savePath);

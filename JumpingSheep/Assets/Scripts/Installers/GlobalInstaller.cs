@@ -21,6 +21,7 @@ public class GlobalInstaller : MonoInstaller {
     //[SerializeField] private Pointer _pointerPrefab;
 
     public override void InstallBindings() {
+        BindLogger();
         BindServices();
         BindSaveManager();
         BindLevelConfigs();
@@ -32,7 +33,6 @@ public class GlobalInstaller : MonoInstaller {
         BindTimeCounter();
         BindSheepSpawner();
         BindInput();
-        BindLogger();
         BindQTESystemCompanents();
         
     }
@@ -41,6 +41,7 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<SheepQuantityCounter>().AsSingle();
         Container.Bind<Score>().AsSingle();
         Container.BindInterfacesAndSelfTo<PauseHandler>().AsSingle();
+        Container.Bind<AdManager>().AsSingle();
     }
 
     private void BindLevelConfigs() {
@@ -72,11 +73,8 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<SwipeHandler>().AsSingle().NonLazy();
     }
 
-    private void BindLogger() {
-        Logger logger = new Logger();
-        Container.Bind<Logger>().FromInstance(logger).AsSingle().NonLazy();
-    }
-
+    private void BindLogger() => Container.Bind<Logger>().AsSingle();
+    
     private void BindSheepSpawner() {
         Transform spawnPoint = Container.InstantiatePrefabForComponent<Transform>(_spawnPoint);
         
@@ -108,11 +106,7 @@ public class GlobalInstaller : MonoInstaller {
 
         Container.BindInstance(_saveConfig).AsSingle();
 
-        SavesManager save = new SavesManager(_saveConfig);
-        Container.BindInstance(save).AsSingle();
-
-        ProgressLoader loader = new ProgressLoader(save);
-        Container.BindInstance(loader).AsSingle();
+        Container.Bind<SavesManager>().AsSingle();
+        Container.Bind<ProgressLoader>().AsSingle();
     }
-
 }

@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7265076e261f59428f46f832a9dda83, type: 3}
   m_Name: SaveManagerConfig
   m_EditorClassIdentifier: 
-  <SaveType>k__BackingField: 1
+  <SaveType>k__BackingField: 2

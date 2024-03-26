@@ -1,8 +1,11 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zenject;
+
+
 
 public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private PauseHandler _pauseHandler;
@@ -10,6 +13,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private SheepQuantityCounter _sheepCounter;
     private LevelConfigs _configs;
     private ProgressLoader _progressLoader;
+    private AdManager _adManager;
     private UIManager _uIManager;
     private DialogSwitcher _dialogSwitcher;
     private EnvironmentSoundManager _environmentSound;
@@ -18,9 +22,9 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private QTESystem _qTESystem;
     private Score _score;
 
-
     private Sheep _currentSheep;
     private bool _sheepOver;
+    private Switchovers _switchover;
 
     private MainMenuDialog MainMenuDialog => _uIManager.MainMenuDialog;
     private LevelSelectionDialog LevelSelectionDialog => _uIManager.LevelSelectionDialog;
@@ -31,7 +35,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     [Inject]
     public void Construct(PauseHandler pauseHandler, SheepSpawner spawner,
                           QTESystem qTESystem, Score score, SheepQuantityCounter sheepCounter,
-                          LevelConfigs configs, ProgressLoader progressLoader) {
+                          LevelConfigs configs, ProgressLoader progressLoader, AdManager adManager) {
 
         _pauseHandler = pauseHandler;
         _spawner = spawner;
@@ -40,6 +44,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _sheepCounter = sheepCounter;
         _configs = configs;
         _progressLoader = progressLoader;
+        _adManager = adManager;
     }
 
     public void Init(UIManager uIManager, EnvironmentSoundManager environmentSound) {
@@ -77,6 +82,26 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     private void ShowLevelSelectionDialog() => _dialogSwitcher.ShowDialog(DialogTypes.LevelSelection);
 
+    private void MakeTransition() {
+        switch (_switchover) {
+            case Switchovers.MainMenu:
+                ShowMainMenuDialog();
+                break;
+
+            case Switchovers.CurrentLevel:
+                OnLevelStarted(_currentLevelConfig);
+                break;
+
+            case Switchovers.NextLevel:
+                _currentLevelConfig = GetLevelConfigByStatus(LevelStatusTypes.Ready);
+                OnLevelStarted(_currentLevelConfig);
+                break;
+
+            default:
+                throw new ArgumentException($"Invalid Switchovers value: {_switchover}");
+        }
+    }
+
     #endregion
 
     #region Dialogs Events
@@ -101,6 +126,11 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _spawner.SheepCreated += OnSheepCreated;
         _sheepCounter.SheepIsOver += OnSheepIsOver;
         _qTESystem.EventFinished += OnQTESystemEventFinished;
+
+        _adManager.FullscreenClosed += OnFullscreenClosed;
+        _adManager.RewardedClosed += OnRewardedClosed;
+        _adManager.RewardedReward += OnRewardedReward;
+
     }
 
     private void RemoveLisener() {
@@ -125,6 +155,10 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _spawner.SheepCreated -= OnSheepCreated;
         _sheepCounter.SheepIsOver -= OnSheepIsOver;
         _qTESystem.EventFinished -= OnQTESystemEventFinished;
+
+        _adManager.FullscreenClosed -= OnFullscreenClosed;
+        _adManager.RewardedClosed -= OnRewardedClosed;
+        _adManager.RewardedReward -= OnRewardedReward;
     }
 
     #endregion
@@ -173,22 +207,14 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     #endregion
 
-    private void UpdateLevelConfigs() {
-        var progressDataList = _progressLoader.LevelProgress;
+    #region AD Events
+    private void OnFullscreenClosed(bool value) => MakeTransition();
 
-        if (progressDataList.Count == 0) {
-            Debug.LogError($"List of LevelProgress is empty");
-            return;
-        }
+    private void OnRewardedReward(string key) { }
 
-        foreach (var iProgress in progressDataList) {
-            var config = _configs.Configs.First(progress => progress.Progress.Name == iProgress.Name);
-            var progress = config.Progress;
+    private void OnRewardedClosed(bool value) { }
 
-            if (iProgress.Equals(progress) == false)
-                config.SetCurrentProgress(progress);
-        }
-    }
+    #endregion
 
     private void OnLevelStarted(LevelConfig config) {
         if (_currentLevelConfig != config)
@@ -220,23 +246,12 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
             _dialogSwitcher.ShowPreviousDialog();
     }
     
-    private void OnMainMenuClicked() {
-        FinishGameplay();
-        ShowMainMenuDialog();
-    }
+    private void OnMainMenuClicked() => FinishGameplay(Switchovers.MainMenu);
+      
+    private void OnResetClicked() => FinishGameplay(Switchovers.CurrentLevel);
+
+    private void OnNextLevelClicked() => FinishGameplay(Switchovers.NextLevel);
     
-    private void OnResetClicked() {
-        FinishGameplay();
-        OnLevelStarted(_currentLevelConfig);
-    }
-
-    private void OnNextLevelClicked() {
-        FinishGameplay();
-
-        _currentLevelConfig = GetLevelConfigByStatus(LevelStatusTypes.Ready);
-        OnLevelStarted(_currentLevelConfig);
-    }
-
     private void StartGameplay() {
         ShowGameplayDialog();
 
@@ -244,7 +259,9 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _spawner.CreateSheep(_currentLevelConfig.Color);
     }
 
-    private void FinishGameplay() {
+    private void FinishGameplay(Switchovers switchover) {
+        _switchover = switchover;
+
         if (_score.StarsCount > 0) {
             _currentLevelConfig.Progress.SetStatus(LevelStatusTypes.Complited);
 
@@ -258,6 +275,15 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         }
 
         Reset();
+
+        ShowFullScreenAds();
+    }
+
+    private void ShowFullScreenAds() {
+        if (_adManager != null)
+            _adManager.ShowFullScreen();
+        else
+            OnFullscreenClosed(true);
     }
 
     private void SaveProgress() {
@@ -268,7 +294,8 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
             data.Add(progress);
         }
 
-        _progressLoader.SaveLevelProgress(data);
+        PlayerData playerData = new PlayerData(data);
+        _progressLoader.SaveLevelProgress(playerData);
     }
 
     private void UnlockLevel() {
@@ -292,5 +319,11 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     public void Dispose() {
         RemoveLisener();
+    }
+
+    private enum Switchovers {
+        MainMenu,
+        CurrentLevel,
+        NextLevel,
     }
 }
