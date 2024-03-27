@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 
 [Serializable]
 public class LevelProgressData {
-
     [JsonConstructor]
     public LevelProgressData(LevelStatusTypes status, string name, int starsCount) {
         Status = status;
@@ -16,11 +15,7 @@ public class LevelProgressData {
     [field: SerializeField] public string Name { get; private set; }
     [field: SerializeField] public int StarsCount { get; private set; }
 
-    public void SetStatus(LevelStatusTypes status) {
-        Status = status;
-    }
+    public void SetStatus(LevelStatusTypes status) => Status = status;
 
-    public void SetStarsCount(int count) {
-        StarsCount = count;
-    }
+    public void SetStarsCount(int count) => StarsCount = count;
 }

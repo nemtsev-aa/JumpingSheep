@@ -13,6 +13,10 @@ public class TimeCounter : ITickable {
     private bool _countdown;
     private bool _countup;
 
+    public TimeCounter() {
+
+    }
+
     public float ElapsedTime => _elapsedTime;
     
     public float RemainingTime => _remainingTime;

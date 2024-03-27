@@ -1,21 +1,35 @@
 using UnityEngine;
 using System.IO;
+using System;
 
 public class Logger {
+    private string _path = Application.persistentDataPath + "/logs.txt";
+    
     public Logger() {
-        
+#if UNITY_EDITOR
+        Debug.Log(_path);
+#elif UNITY_WEBGL
+        Console.WriteLine("Unity WebGL");
+#endif
+
     }
 
     public void Log(string message) {
-        Debug.Log(message);
-
-        StreamWriter writer = new StreamWriter(GetLogsPath(), true);
-        writer.WriteLine(message);
-        writer.Close();
+        if (Application.platform == RuntimePlatform.WebGLPlayer)
+            Console.WriteLine(message);
+        else
+            WriteLogToFile(message);
     }
 
-    string GetLogsPath() {
-        return Application.persistentDataPath + "/logs.txt";
+    private void WriteLogToFile(string message) {
+#if UNITY_EDITOR
+        Debug.Log(message);
+#endif
+
+        using (var writer = new StreamWriter(_path, true)) {
+            writer.WriteLine(message);
+            writer.Close();
+        }
     }
 }
 

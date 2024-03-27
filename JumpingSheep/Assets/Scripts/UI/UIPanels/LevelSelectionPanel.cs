@@ -22,7 +22,6 @@ public class LevelSelectionPanel : UIPanel {
 
     public override void Reset() {
         base.Reset();
-
     }
 
     public override void RemoveListeners() {

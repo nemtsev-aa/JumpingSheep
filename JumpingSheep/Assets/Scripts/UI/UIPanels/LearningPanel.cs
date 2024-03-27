@@ -32,16 +32,11 @@ public class LearningPanel : UIPanel {
         base.RemoveListeners();
 
         _playButton.onClick.RemoveListener(PlayButtonClick);
-        _mainMenuButton.onClick.AddListener(MainMenuButtonClick);
+        _mainMenuButton.onClick.RemoveListener(MainMenuButtonClick);
     }
 
-    private void MainMenuButtonClick() {
-        MainMenuButtonClicked?.Invoke();
-    }
-
-    private void PlayButtonClick() {
-        PlayButtonClicked?.Invoke();
-    }
-
+    private void MainMenuButtonClick() => MainMenuButtonClicked?.Invoke();
+    
+    private void PlayButtonClick() => PlayButtonClicked?.Invoke();
 
 }

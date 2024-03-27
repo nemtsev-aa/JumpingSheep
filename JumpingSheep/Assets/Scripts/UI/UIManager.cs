@@ -5,7 +5,6 @@ using Zenject;
 
 public class UIManager : MonoBehaviour {
     private DialogFactory _factory;
-
     private Dictionary<DialogTypes, Dialog> _dialogsDictionary;
 
     public MainMenuDialog MainMenuDialog { get; private set; }
@@ -13,7 +12,6 @@ public class UIManager : MonoBehaviour {
     public GameDialog GameDialog { get; private set; }
     public SettingsDialog SettingsDialog { get; private set; }
     public AboutDialog AboutDialog { get; private set; }
-    
     public DialogSwitcher DialogSwitcher { get; private set; }
 
     [Inject]

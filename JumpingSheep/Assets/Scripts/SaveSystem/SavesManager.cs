@@ -14,8 +14,11 @@ public class SavesManager : IService, IDisposable {
 
     private SaveType _currentSaveType = SaveType.Binary;
     private Dictionary<SaveType, IStorageService> _saveServices = new Dictionary<SaveType, IStorageService>();
+    private Logger _logger;
 
-    public SavesManager(SaveManagerConfig _config) {
+    public SavesManager(SaveManagerConfig _config, Logger logger) {
+        _logger = logger;
+
         if (_config.SavePath != "")
             _savePath = _config.SavePath;
 
@@ -52,10 +55,10 @@ public class SavesManager : IService, IDisposable {
 
         if (File.Exists(path)) {
             File.Delete(path);
-            Debug.Log("SavesManager: DeleteFile - Deleted");
+            _logger.Log("SavesManager: DeleteFile - Deleted");
         } 
         else
-            Debug.LogError("SavesManager: DeleteFile - No file");
+            _logger.Log("SavesManager: DeleteFile - No file");
     }
 
     private void InitializationServices() {

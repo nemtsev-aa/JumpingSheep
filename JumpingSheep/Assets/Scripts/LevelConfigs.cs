@@ -18,7 +18,6 @@ public class LevelConfigs : ScriptableObject {
         }
     }
 
-    [ContextMenu(nameof(ResetProgress))]
     public void ResetProgress() {
         PlayerPrefs.DeleteAll();
 

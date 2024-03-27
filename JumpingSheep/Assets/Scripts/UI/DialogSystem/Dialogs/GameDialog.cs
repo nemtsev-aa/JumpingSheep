@@ -28,17 +28,16 @@ public class GameDialog : Dialog {
     public void Constuct(PauseHandler pauseHandler, UICompanentsFactory factory, SheepQuantityCounter sheepCounter, QTESystem qTESystem) {
         _pauseHandler = pauseHandler;
         _factory = factory;
+        _counter = sheepCounter;
+        _qTESystem = qTESystem;
 
-         _learningPanel = GetPanelByType<LearningPanel>();
+        _learningPanel = GetPanelByType<LearningPanel>();
         _sheepQuantityPanel = GetPanelByType<SheepQuantityPanel>();
         _qTEEventsPanel = GetPanelByType<QTEEventsPanel>();
         _resultPanel = GetPanelByType<ResultPanel>();
         _innerGlowPanel = GetPanelByType<InnerGlowPanel>();
         _navigationPanel = GetPanelByType<NavigationPanel>();
         _pausePanel = GetPanelByType<PausePanel>();
-
-        _counter = sheepCounter;
-        _qTESystem = qTESystem;
 
         _resultPanel.Init();
         _sheepQuantityPanel.Init(_counter, _factory);

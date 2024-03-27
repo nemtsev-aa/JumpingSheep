@@ -61,22 +61,10 @@ public class SheepQuantityPanel : UIPanel {
         _counter.RemainingQuantityChanged -= OnRemainingQuantityChanged;
     }
 
-    private void CreateIcons() {
-        _sheepIcons = new List<SheepIcon>();
-
-        for (int i = 0; i < _sheepIconQuantity; i++) {
-            SheepIconConfig config = new SheepIconConfig();
-            SheepIcon newSheepIcon = _factory.Get<SheepIcon>(config, _sheepIconParent);
-            newSheepIcon.Show(true);
-
-            _sheepIcons.Add(newSheepIcon);
+    private void ShowSheepIcons() {
+        foreach (var iIcon in _sheepIcons) {
+            iIcon.Show(true);
         }
-    }
-
-    private void OnLevelNameChanged(string name) => _levelNameLabel.text = $"{LevelName} {name}";
-
-    private void OnRemainingQuantityChanged(int value) {
-        _sheepIcons[value].Show(false);
     }
 
     private void ClearSheepIcons() {
@@ -88,9 +76,21 @@ public class SheepQuantityPanel : UIPanel {
         }
     }
 
-    private void ShowSheepIcons() {
-        foreach (var iIcon in _sheepIcons) {
-            iIcon.Show(true);
+    private void CreateIcons() {
+        _sheepIcons = new List<SheepIcon>();
+
+        for (int i = 0; i < _sheepIconQuantity; i++) {
+            SheepIconConfig config = new SheepIconConfig();
+            
+            SheepIcon newSheepIcon = _factory.Get<SheepIcon>(config, _sheepIconParent);
+            newSheepIcon.Show(true);
+
+            _sheepIcons.Add(newSheepIcon);
         }
     }
+
+    private void OnLevelNameChanged(string name) => _levelNameLabel.text = $"{LevelName} {name}";
+
+    private void OnRemainingQuantityChanged(int value) => _sheepIcons[value].Show(false);
+    
 }

@@ -138,7 +138,6 @@ public class QTESystem : IPause, ITickable, IDisposable {
         ClearEvents();
 
         _levelConfig = null;
-
         _pauseHandler.Remove(this);
     }
 

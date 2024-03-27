@@ -21,7 +21,7 @@ public class QTEEvent : IDisposable {
     }
 
     ~QTEEvent() {
-        Debug.Log("QTEEvent: Destructor was called");
+        
     }
 
     public QTEEventState CurrentState { get; private set; }

@@ -1,11 +1,13 @@
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zenject;
-
-
+public enum Switchovers {
+    MainMenu,
+    CurrentLevel,
+    NextLevel,
+}
 
 public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private PauseHandler _pauseHandler;
@@ -107,7 +109,10 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     #region Dialogs Events
     private void AddListener() {
         SettingsDialog.BackClicked += OnSettingsDialogBackClicked;
+        SettingsDialog.ResetClicked += OnSettingsDialogResetClicked;
+
         AboutDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
+        LevelSelectionDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
 
         MainMenuDialog.SettingsDialogShowed += ShowSettings;
         MainMenuDialog.LevelSelectDialogShowed += ShowLevelSelectionDialog;
@@ -135,7 +140,10 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     private void RemoveLisener() {
         SettingsDialog.BackClicked -= OnSettingsDialogBackClicked;
+        SettingsDialog.ResetClicked -= OnSettingsDialogResetClicked;
+
         AboutDialog.BackClicked -= _dialogSwitcher.ShowPreviousDialog;
+        LevelSelectionDialog.BackClicked -= _dialogSwitcher.ShowPreviousDialog;
 
         MainMenuDialog.SettingsDialogShowed -= ShowSettings;
         MainMenuDialog.LevelSelectDialogShowed -= ShowLevelSelectionDialog;
@@ -245,13 +253,20 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         else
             _dialogSwitcher.ShowPreviousDialog();
     }
-    
+
     private void OnMainMenuClicked() => FinishGameplay(Switchovers.MainMenu);
-      
+
     private void OnResetClicked() => FinishGameplay(Switchovers.CurrentLevel);
 
     private void OnNextLevelClicked() => FinishGameplay(Switchovers.NextLevel);
-    
+
+    private void OnSettingsDialogResetClicked() {
+        if (_adManager.Platform == GamePush.Platform.YANDEX)
+            ResetCloudPlayerProgress();
+
+        ResetLocalPlayerProgress();
+    }
+
     private void StartGameplay() {
         ShowGameplayDialog();
 
@@ -263,6 +278,8 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _switchover = switchover;
 
         if (_score.StarsCount > 0) {
+            UnlockLevel();
+
             _currentLevelConfig.Progress.SetStatus(LevelStatusTypes.Complited);
 
             var sratsCount = _score.StarsCount;
@@ -270,8 +287,6 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
                 _currentLevelConfig.Progress.SetStarsCount(sratsCount);
                 SaveProgress();
             }
-
-            UnlockLevel(); 
         }
 
         Reset();
@@ -280,7 +295,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     private void ShowFullScreenAds() {
-        if (_adManager != null)
+        if (_adManager != null && _adManager.Platform == GamePush.Platform.YANDEX)
             _adManager.ShowFullScreen();
         else
             OnFullscreenClosed(true);
@@ -300,15 +315,14 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     private void UnlockLevel() {
         int index = _configs.Configs.IndexOf(_currentLevelConfig) + 1;
-        
+
         if (index > _configs.Configs.Count) {
             ShowMainMenuDialog();
         }
-        else 
-        {
+        else {
             var level = _configs.Configs[index];
 
-            if (level.Progress.Status == LevelStatusTypes.Locked) 
+            if (level.Progress.Status == LevelStatusTypes.Locked)
                 level.Progress.SetStatus(LevelStatusTypes.Ready);
         }
     }
@@ -317,13 +331,11 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         return _configs.Configs.First(config => config.Progress.Status == status);
     }
 
+    private void ResetLocalPlayerProgress() => _progressLoader.ResetLocalPlayerProgress();
+
+    private void ResetCloudPlayerProgress() => _progressLoader.ResetCloudPlayerProgress();
+
     public void Dispose() {
         RemoveLisener();
-    }
-
-    private enum Switchovers {
-        MainMenu,
-        CurrentLevel,
-        NextLevel,
     }
 }

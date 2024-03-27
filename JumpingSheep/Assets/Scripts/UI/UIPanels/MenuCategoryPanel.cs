@@ -17,6 +17,11 @@ public class MenuCategoryPanel : UIPanel {
         AddListeners();
     }
 
+    public override void Show(bool value) {
+        base.Show(value);
+
+    }
+
     public override void AddListeners() {
         base.AddListeners();
 
@@ -27,15 +32,12 @@ public class MenuCategoryPanel : UIPanel {
     }
 
     public override void RemoveListeners() {
+        base.RemoveListeners();
+
         _gameplayButton.onClick.RemoveListener(GameplayButtonClick);
         _settingsButton.onClick.RemoveListener(SettingsButtonClick);
         _aboutButton.onClick.RemoveListener(AboutButtonClick);
         _quitButton.onClick.RemoveListener(QuitButtonClick);
-    }
-
-    public override void Show(bool value) {
-        base.Show(value);
-
     }
 
     private void GameplayButtonClick() => GameplayDialogSelected?.Invoke();

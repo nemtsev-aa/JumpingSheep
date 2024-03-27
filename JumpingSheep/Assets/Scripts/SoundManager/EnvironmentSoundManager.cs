@@ -41,11 +41,13 @@ public class EnvironmentSoundManager : SoundManager {
         AudioSource.PlayOneShot(currentClip);
     }
 
-    public override void AddListener() { }
-
-    public override void RemoveLisener() { }
-
-    private void Update() {
-        AudioSource.volume = Configs.Volume;
+    public override void AddListener() {
+        Configs.VolumeChanged += OnVolumeChanged;
     }
+
+    public override void RemoveLisener() {
+        Configs.VolumeChanged -= OnVolumeChanged;
+    }
+
+    private void OnVolumeChanged(float value) => AudioSource.volume = Configs.Volume;
 }

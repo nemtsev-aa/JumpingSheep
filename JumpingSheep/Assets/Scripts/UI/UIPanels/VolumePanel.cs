@@ -4,7 +4,6 @@ using UnityEngine.UI;
 
 public class VolumePanel : UIPanel {
     [SerializeField] private SoundConfigs _configs;
-
     [SerializeField] private Slider _volumeSlideBar;
     [SerializeField] private TextMeshProUGUI _labelText;
 
@@ -29,12 +28,12 @@ public class VolumePanel : UIPanel {
 
     private void VolumeValueChanged(float value) {
         _labelText.text = $"{GetVolumeValue(value)}";
-        _configs.Volume = value;
+        _configs.SetVolume(value);
     }
 
     private string GetVolumeValue(float value) {
         float currentValue = Mathf.Clamp(value, 0, 1);
-        string valueText = $"{Mathf.RoundToInt(currentValue * 100)} %";
+        string valueText = $"{Mathf.RoundToInt(currentValue * 100)}%";
         
         return valueText;
     }

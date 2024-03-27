@@ -1,6 +1,5 @@
 using GamePush;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -46,7 +45,7 @@ public class ProgressLoader {
         GP_Player.Set(Key, stringData);
         GP_Player.Sync();
     }
-    
+
     private void OnLevelProgressSaved(bool status) {
         if (status == true)
             _logger.Log("Save complited");

@@ -34,7 +34,7 @@ public class QTEEventsPanel : UIPanel {
     public override void Show(bool value) {
         base.Show(value);
 
-        if (value)
+        if (value == true)
             _resoverallResultsultText.text = "";
 
         if (_finishSequence != null)
@@ -45,7 +45,6 @@ public class QTEEventsPanel : UIPanel {
         base.Reset();
 
         _eventViews.Clear();
-
         _events = null;
     }
 

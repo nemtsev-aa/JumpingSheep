@@ -8,6 +8,8 @@ public class AdManager : IDisposable {
 
     private PauseHandler _pauseHandler;
 
+    public Platform Platform => GP_Platform.Type();
+
     public AdManager(PauseHandler pauseHandler) {
         _pauseHandler = pauseHandler;
 
@@ -37,14 +39,13 @@ public class AdManager : IDisposable {
     }
 
     private void GP_Ads_OnFullscreenStart() => _pauseHandler.SetPause(true);
+    private void GP_Ads_OnRewardedStart() => _pauseHandler.SetPause(true);
     
     private void GP_Ads_OnFullscreenClose(bool value) {
         _pauseHandler.SetPause(false);
 
         FullscreenClosed?.Invoke(value);
     }
-
-    private void GP_Ads_OnRewardedStart() => _pauseHandler.SetPause(true);
 
     private void GP_Ads_OnRewardedClose(bool value) {
         _pauseHandler.SetPause(false);
