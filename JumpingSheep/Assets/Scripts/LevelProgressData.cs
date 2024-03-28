@@ -1,11 +1,9 @@
 using UnityEngine;
 using System;
-using Newtonsoft.Json;
 
 [Serializable]
 public class LevelProgressData {
-    [JsonConstructor]
-    public LevelProgressData(LevelStatusTypes status, string name, int starsCount) {
+     public LevelProgressData(LevelStatusTypes status, string name, int starsCount) {
         Status = status;
         Name = name;
         StarsCount = starsCount;

@@ -9,7 +9,7 @@ public class SheepSoundManager : SoundManager {
     public void Init(Sheep sheep) {
         _eventsHandler = sheep.EventsHandler;
         AudioSource = GetComponent<AudioSource>();
-        AudioSource.volume = Configs.Volume;
+        AudioSource.volume = Volume.Volume;
 
         AddListener();
         OnSheepMoved();

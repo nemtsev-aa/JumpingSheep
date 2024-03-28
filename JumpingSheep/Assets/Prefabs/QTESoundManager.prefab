@@ -25,13 +25,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8869151675867374679}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5819492873292857247
 MonoBehaviour:
@@ -45,15 +45,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9916354ce33950c4ea9d8f052d95bccb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Configs: {fileID: 11400000, guid: 00304f30471494f46b53bb6a069049f9, type: 2}
+  Volume: {fileID: 11400000, guid: 00304f30471494f46b53bb6a069049f9, type: 2}
   _config:
-    <SuccesEvent>k__BackingField: {fileID: 8300000, guid: d5931b55b8b142748b4fcb202788aa3b,
+    <SuccesEvent>k__BackingField: {fileID: 8300000, guid: dead1d6755007944b80fa383e0c157d6,
       type: 3}
-    <FailEvent>k__BackingField: {fileID: 8300000, guid: eb24651026cba0140b3876eebf27153d,
+    <FailEvent>k__BackingField: {fileID: 8300000, guid: 0e9a9497989d1b3408899bc5ff0daea0,
       type: 3}
-    <CompleteSuccess>k__BackingField: {fileID: 8300000, guid: 270db568195bc194ba3ea404db1ba7c5,
+    <CompleteSuccess>k__BackingField: {fileID: 8300000, guid: 1a0553014ead42b40b6be33eb7356c5b,
       type: 3}
-    <CompleteFail>k__BackingField: {fileID: 8300000, guid: 51978aeb8353b9541add8190af849a60,
+    <CompleteFail>k__BackingField: {fileID: 8300000, guid: 33857f1fc6112be4b85d6559b4249cfa,
       type: 3}
 --- !u!82 &6210557946998935079
 AudioSource:
@@ -67,7 +67,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.3
   m_Pitch: 1
   Loop: 0
   Mute: 0

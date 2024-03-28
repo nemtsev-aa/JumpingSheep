@@ -9,6 +9,7 @@ public class QTESystem : IPause, ITickable, IDisposable {
     public event Action<bool> AllEventsCompleted;
     public event Action<bool> EventFinished;
 
+    private DiContainer _diContainer;
     private PauseHandler _pauseHandler;
     private readonly QTESoundManager _qTESoundManager;
     private readonly SwipeHandler _swipeHandler;
@@ -17,11 +18,13 @@ public class QTESystem : IPause, ITickable, IDisposable {
     private readonly List<QTEEventConfig> _eventConfigs;
     private LevelConfig _levelConfig;
 
+    private bool _soundCreated;
     private QTEEvent _currentEvent;
     private int _successfulEventCount;
     private bool _isPaused;
 
-    public QTESystem(PauseHandler pauseHandler, QTEEventConfigs configs, QTESoundManager qTESoundManager, SwipeHandler swipeHandler) {
+    public QTESystem(DiContainer diContainer, PauseHandler pauseHandler, QTEEventConfigs configs, QTESoundManager qTESoundManager, SwipeHandler swipeHandler) {
+        _diContainer = diContainer;
         _pauseHandler = pauseHandler;
         _pauseHandler.Add(this);
 
@@ -38,6 +41,13 @@ public class QTESystem : IPause, ITickable, IDisposable {
 
     private int MinSuccessfulEventCount => _levelConfig.QTEConfig.MinSuccessfulEventCount;
     private int EventsCount => _levelConfig.QTEConfig.EventsCount;
+
+    public void CreateQTESoundManager() {
+        if (_soundCreated)
+            return;
+
+       _diContainer.InstantiatePrefabForComponent<QTESoundManager>(_qTESoundManager).Init(this);
+    }
 
     public void SetLevelConfig(LevelConfig config) => _levelConfig = config;
 

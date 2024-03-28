@@ -8,11 +8,11 @@ public enum MusicType {
 }
 
 public class EnvironmentSoundManager : SoundManager {
-    [SerializeField] private EnvironmentSoundConfig _config;
+    [SerializeField] private EnvironmentSoundConfig _environmentSounds;
 
     public void Init() {
         AudioSource = GetComponent<AudioSource>();
-        AudioSource.volume = Configs.Volume - 0.1f;
+        AudioSource.volume = Volume.Volume - 0.1f;
 
         AddListener();
     }
@@ -22,15 +22,15 @@ public class EnvironmentSoundManager : SoundManager {
 
         switch (type) {
             case MusicType.UI:
-                currentClip = _config.UI;
+                currentClip = _environmentSounds.UI;
                 break;
 
             case MusicType.Gameplay:
-                currentClip = _config.Gameplay;
+                currentClip = _environmentSounds.Gameplay;
                 break;
 
             case MusicType.GameOver:
-                currentClip = _config.Gameover;
+                currentClip = _environmentSounds.Gameover;
                 break;
 
             default:
@@ -42,12 +42,12 @@ public class EnvironmentSoundManager : SoundManager {
     }
 
     public override void AddListener() {
-        Configs.VolumeChanged += OnVolumeChanged;
+        Volume.VolumeChanged += OnVolumeChanged;
     }
 
     public override void RemoveLisener() {
-        Configs.VolumeChanged -= OnVolumeChanged;
+        Volume.VolumeChanged -= OnVolumeChanged;
     }
 
-    private void OnVolumeChanged(float value) => AudioSource.volume = Configs.Volume;
+    private void OnVolumeChanged(float value) => AudioSource.volume = Volume.Volume;
 }

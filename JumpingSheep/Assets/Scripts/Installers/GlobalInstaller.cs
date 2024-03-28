@@ -2,7 +2,10 @@ using UnityEngine;
 using Zenject;
 
 public class GlobalInstaller : MonoInstaller {
+    public const float InitDelay = 0.1f;
+
     [SerializeField] private LevelConfigs _levelConfig;
+    [SerializeField] private DialogPrefabs _dialogPrefabs;
     [SerializeField] private UICompanentPrefabs _uiCompanentPrefabs;
     [SerializeField] private SaveManagerConfig _saveConfig;
 
@@ -15,11 +18,10 @@ public class GlobalInstaller : MonoInstaller {
         BindServices();
         BindLevelConfigs();
         BindSaveManager();
-        BindUICompanentsConfig();
+        BindUIPrefabs();
 
         BindFactories();
         BindInput();
-        BindQTESystemCompanents();
     }
 
     private void BindServices() {
@@ -30,12 +32,20 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<Score>().AsSingle();
         Container.Bind<SheepQuantityCounter>().AsSingle();
         Container.Bind<AdManager>().AsSingle();
+
+        if (_qTEEventConfigs.Configs.Count == 0)
+            _logger.Log($"List of QTEEventConfigs is empty");
+
+        Container.Bind<QTEEventConfigs>().FromInstance(_qTEEventConfigs).AsSingle();
+        Container.Bind<QTESoundManager>().FromInstance(_qTESoundManager).AsSingle();
+
+        Container.BindInterfacesAndSelfTo<QTESystem>().AsSingle();
     }
 
     private void BindLevelConfigs() {
-        if (_levelConfig.Configs.Count == 0) 
+        if (_levelConfig.Configs.Count == 0)
             _logger.Log($"List of LevelConfig is empty");
-        
+
         Container.Bind<LevelConfigs>().FromInstance(_levelConfig).AsSingle();
     }
 
@@ -49,10 +59,15 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<ProgressLoader>().AsSingle();
     }
 
-    private void BindUICompanentsConfig() {
-        if (_uiCompanentPrefabs.Prefabs.Count == 0) 
+    private void BindUIPrefabs() {
+        if (_dialogPrefabs.Prefabs.Count == 0)
+            _logger.Log($"List of DialogPrefabs is empty");
+
+        Container.Bind<DialogPrefabs>().FromInstance(_dialogPrefabs).AsSingle();
+
+        if (_uiCompanentPrefabs.Prefabs.Count == 0)
             _logger.Log($"List of UICompanentPrefabs is empty");
-        
+
         Container.Bind<UICompanentPrefabs>().FromInstance(_uiCompanentPrefabs).AsSingle();
     }
 
@@ -68,17 +83,5 @@ public class GlobalInstaller : MonoInstaller {
             Container.BindInterfacesAndSelfTo<DesktopInput>().AsSingle();
 
         Container.Bind<SwipeHandler>().AsSingle().NonLazy();
-    }
-
-    private void BindQTESystemCompanents() {
-        if (_qTEEventConfigs.Configs.Count == 0) 
-            _logger.Log($"List of QTEEventConfigs is empty");
-        
-            
-        Container.Bind<QTEEventConfigs>().FromInstance(_qTEEventConfigs).AsSingle();
-        Container.BindInterfacesAndSelfTo<QTESystem>().AsSingle();
-
-        QTESoundManager qTESoundManager = Container.InstantiatePrefabForComponent<QTESoundManager>(_qTESoundManager);
-        Container.Bind<QTESoundManager>().FromInstance(qTESoundManager).AsSingle();
     }
 }

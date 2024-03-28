@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class VolumePanel : UIPanel {
-    [SerializeField] private SoundConfigs _configs;
+    [SerializeField] private VolumeConfig _configs;
     [SerializeField] private Slider _volumeSlideBar;
     [SerializeField] private TextMeshProUGUI _labelText;
 

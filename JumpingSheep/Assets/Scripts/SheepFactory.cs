@@ -1,7 +1,7 @@
-using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Zenject;
-using System;
 
 public enum SheepColor {
     White,
@@ -10,46 +10,33 @@ public enum SheepColor {
 }
 
 public class SheepFactory {
-    private const string WhiteSheep = "WhiteSheep";
-    private const string GraySheep = "GraySheep";
-    private const string RedSheep = "RedSheep";
+    private readonly DiContainer _container;
+    private readonly Transform _spawnPointPrefab;
+    private Transform _spawnPoint;
 
-    private const string ConfigsPath = "Prefabs/Sheeps";
+    private readonly List<SheepData> _sheepDataList;
 
-    private Sheep _white, _gray, _red;
-
-    private DiContainer _container;
-
-    public SheepFactory(DiContainer container) {
+    public SheepFactory(DiContainer container, SheepPrefabs sheepPrefabs, Transform spawnPoint) {
         _container = container;
-        Load();
+        _spawnPointPrefab = spawnPoint;
+
+        _sheepDataList = new List<SheepData>();
+        _sheepDataList.AddRange(sheepPrefabs.DataList);
     }
 
-    public Sheep Get(Transform spawnPoint, SheepColor color) {
-        Sheep prefab = GetPrefabByColor(color);
-        Sheep newSheep = _container.InstantiatePrefabForComponent<Sheep>(prefab, spawnPoint.position, spawnPoint.rotation, spawnPoint);
-        return newSheep;
+    public Sheep Get(SheepColor color) {
+        if (_spawnPoint == null)
+            CreateSpawnPoint();
+
+        var position = _spawnPoint.position;
+        var rotation = _spawnPoint.rotation;
+
+        return _container.InstantiatePrefabForComponent<Sheep>(GetSheepPrefabByColor(color), position, rotation, _spawnPoint);
     }
 
-    private void Load() {
-        _white = Resources.Load<Sheep>(Path.Combine(ConfigsPath, WhiteSheep));
-        _gray = Resources.Load<Sheep>(Path.Combine(ConfigsPath, GraySheep));
-        _red = Resources.Load<Sheep>(Path.Combine(ConfigsPath, RedSheep));
-    }
-
-    private Sheep GetPrefabByColor(SheepColor color) {
-        switch (color) {
-            case SheepColor.White:
-                return _white;
-
-            case SheepColor.Gray:
-                return _gray;
-
-            case SheepColor.Red:
-                return _red;
-
-            default:
-                throw new ArgumentException($"Invalid SheepColor is {color}");
-        }
+    private void CreateSpawnPoint() => _spawnPoint = _container.InstantiatePrefabForComponent<Transform>(_spawnPointPrefab);
+    
+    private Sheep GetSheepPrefabByColor(SheepColor color) {
+        return _sheepDataList.First(data => data.Color == color).Prefab;
     }
 }

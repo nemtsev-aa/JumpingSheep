@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public abstract class Dialog : MonoBehaviour, IDisposable {
+public class Dialog : MonoBehaviour, IDisposable {
     public event Action BackClicked;
     public event Action SettingsClicked;
 
@@ -65,7 +65,9 @@ public abstract class Dialog : MonoBehaviour, IDisposable {
         return (T)Panels.FirstOrDefault(panel => panel is T);
     }
 
-    public abstract void InitializationPanels();
+    public virtual void InitializationPanels() {
+    
+    }
 
     private void BackButtonClick() {
         ResetPanels();

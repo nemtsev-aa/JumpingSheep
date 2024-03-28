@@ -1,35 +1,20 @@
+using System.Collections;
 using UnityEngine;
-using Zenject;
 
 public class Bootstrap : MonoBehaviour {
+    public const float InitDelay = 0.1f;
+
     [SerializeField] private GameplayMediator _gameplayMediator;
     [SerializeField] private UIManager _uIManager;
     [SerializeField] private EnvironmentSoundManager _environmentSoundManager;
 
-    private ProgressLoader _loader;
-    private LevelConfigs _configs;
+    private void Start() => StartCoroutine(Init());
 
-    [Inject]
-    public void Construct(ProgressLoader loader, LevelConfigs configs) {
-        _loader = loader;
-        _configs = configs;
-    }
-
-    private void Start() {
-        LoadProgress();
+    private IEnumerator Init() {
+        yield return new WaitForSeconds(InitDelay);
 
         _uIManager.Init();
         _environmentSoundManager.Init();
         _gameplayMediator.Init(_uIManager, _environmentSoundManager);
-    }
-
-    private void LoadProgress() {
-        _loader.LoadPlayerData();
-        var playerData = _loader.PlayerData;
-
-        if (playerData == null)
-            return;
-
-        _configs.UpdateProgress(playerData.LevelProgressDatas);
     }
 }

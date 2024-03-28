@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using Zenject;
 
 public class MainMenuDialog : Dialog {
     public event Action LevelSelectDialogShowed;
@@ -8,17 +7,9 @@ public class MainMenuDialog : Dialog {
     public event Action AboutDialogShowed;
 
     private MenuCategoryPanel _category;
-    private Logger _logger;
-
-    [Inject]
-    public void Construct(Logger logger) {
-        _logger = logger;
-    }
 
     public override void Init() {
         base.Init();
-
-        _logger.Log("Начало метода [DesktopDialog : Init]");
     }
 
     public override void InitializationPanels() {

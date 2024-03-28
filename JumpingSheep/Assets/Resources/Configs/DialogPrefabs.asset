@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e5b4b17a037a7e429fadb924b8cbc43, type: 3}
+  m_Name: DialogPrefabs
+  m_EditorClassIdentifier: 
+  <Prefabs>k__BackingField:
+  - {fileID: 5496518563900844121, guid: 08a45c4f95d9bd54bb8424af51dac317, type: 3}
+  - {fileID: 9148303491706998471, guid: a2a7369b456c590418e2250874936024, type: 3}
+  - {fileID: 6743937100157315758, guid: 280c1c6f6960d8043ac494ca9705ffde, type: 3}
+  - {fileID: 2265071174958437792, guid: 3d2bbf2a20f04104093707cc96baef67, type: 3}
+  - {fileID: 343629154236368343, guid: 8f53587eb2fdf084aa9b6e46a1dbe8e4, type: 3}

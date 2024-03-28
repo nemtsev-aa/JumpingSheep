@@ -55,6 +55,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
         _dialogSwitcher = uIManager.DialogSwitcher;
         AddListener();
+
         ShowMainMenuDialog();
     }
 
@@ -74,16 +75,20 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     private void ShowGameplayDialog() {
+        _qTESystem.CreateQTESoundManager();
         _environmentSound.PlaySound(MusicType.Gameplay);
-        _dialogSwitcher.ShowDialog(DialogTypes.Game);
+        _dialogSwitcher.ShowDialog(DialogTypes.Game); 
     }
 
     private void ShowSettings() => _dialogSwitcher.ShowDialog(DialogTypes.Settings);
 
     private void ShowAboutDialog() => _dialogSwitcher.ShowDialog(DialogTypes.About);
 
-    private void ShowLevelSelectionDialog() => _dialogSwitcher.ShowDialog(DialogTypes.LevelSelection);
-
+    private void ShowLevelSelectionDialog() {
+        LoadProgress();
+        _dialogSwitcher.ShowDialog(DialogTypes.LevelSelection);
+    }
+        
     private void MakeTransition() {
         switch (_switchover) {
             case Switchovers.MainMenu:
@@ -223,6 +228,16 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private void OnRewardedClosed(bool value) { }
 
     #endregion
+    
+    private void LoadProgress() {
+        _progressLoader.LoadPlayerData();
+        var playerData = _progressLoader.PlayerData;
+
+        if (playerData == null)
+            return;
+
+        _configs.UpdateProgress(playerData.LevelProgressDatas);
+    }
 
     private void OnLevelStarted(LevelConfig config) {
         if (_currentLevelConfig != config)

@@ -6,12 +6,11 @@ public class Logger {
     private string _path = Application.persistentDataPath + "/logs.txt";
     
     public Logger() {
-#if UNITY_EDITOR
-        Debug.Log(_path);
-#elif UNITY_WEBGL
-        Console.WriteLine("Unity WebGL");
-#endif
-
+//#if UNITY_EDITOR
+//        Debug.Log(_path);
+//#elif UNITY_WEBGL
+//        Console.WriteLine("Unity WebGL");
+//#endif
     }
 
     public void Log(string message) {
