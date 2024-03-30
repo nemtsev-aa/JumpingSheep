@@ -2,15 +2,11 @@ using System;
 using UnityEngine;
 
 public class MainMenuDialog : Dialog {
-    public event Action LevelSelectDialogShowed;
-    public event Action SettingsDialogShowed;
-    public event Action AboutDialogShowed;
+    public static event Action LevelSelectDialogShowed;
+    public static event Action SettingsDialogShowed;
+    public static event Action AboutDialogShowed;
 
     private MenuCategoryPanel _category;
-
-    public override void Init() {
-        base.Init();
-    }
 
     public override void InitializationPanels() {
         _category = GetPanelByType<MenuCategoryPanel>();

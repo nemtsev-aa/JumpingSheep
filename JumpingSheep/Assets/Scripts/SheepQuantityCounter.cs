@@ -13,14 +13,16 @@ public class SheepQuantityCounter {
     }
 
     public int MaxQuantity { get; private set; }
-
+    public string LevelName { get; private set; }
+    
     public void SetLevelConfig(LevelConfig levelConfig) {
         _levelConfig = levelConfig;
 
         MaxQuantity = _levelConfig.SheepCount;
+        LevelName = _levelConfig.Progress.Name;
         _remainingQuantity = MaxQuantity;
 
-        LevelNameChanged?.Invoke(_levelConfig.Progress.Name);
+        LevelNameChanged?.Invoke(LevelName);
     }
 
     public void TakeSheep() {

@@ -12,7 +12,7 @@ public class Sheep : MonoBehaviour, IPause, IDisposable {
 
     private Rigidbody _rigidbody;
     private Animator _animator;
-    private SheepSoundManager _soundManager;
+    private SheepSFXManager _sheepSFXManager;
     private QTESystem _qTESystem;
 
     private float _currentSpeed;
@@ -25,13 +25,13 @@ public class Sheep : MonoBehaviour, IPause, IDisposable {
 
     public AnimatorEventsHandler EventsHandler { get; private set; }
 
-    public void Init(QTESystem qTESystem, PauseHandler pauseHandler) {
+    public void Init(QTESystem qTESystem, PauseHandler pauseHandler, SheepSFXManager sheepSFXManager) {
         _rigidbody = GetComponent<Rigidbody>();
         _animator = GetComponentInChildren<Animator>();
-        _soundManager = GetComponent<SheepSoundManager>();
         EventsHandler = GetComponentInChildren<AnimatorEventsHandler>();
 
-        _soundManager.Init(this);
+        _sheepSFXManager = sheepSFXManager;
+        _sheepSFXManager.Init(this);
 
         _qTESystem = qTESystem;
         _qTESystem.AllEventsCompleted += OnQTESystemAllEventsCompleted;

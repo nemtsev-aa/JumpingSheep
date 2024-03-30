@@ -1,9 +1,10 @@
-using System;
 using UnityEngine;
 
-public class SheepSoundManager : SoundManager {
+public class SheepSFXManager : SoundManager {
     [SerializeField] private SheepSoundConfig _config;
-    
+
+    public SheepSoundConfig SoundConfig => _config;
+
     private AnimatorEventsHandler _eventsHandler;
 
     public void Init(Sheep sheep) {

@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class Dialog : MonoBehaviour, IDisposable {
-    public event Action BackClicked;
-    public event Action SettingsClicked;
+    public static event Action BackClicked;
+    public static event Action SettingsClicked;
 
     [SerializeField] protected Button BackButton;
     [SerializeField] protected Button SettingsButton;

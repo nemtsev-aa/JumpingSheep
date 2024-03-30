@@ -10,35 +10,22 @@ public enum MusicType {
 public class EnvironmentSoundManager : SoundManager {
     [SerializeField] private EnvironmentSoundConfig _environmentSounds;
 
+    public EnvironmentSoundConfig SoundConfig => _environmentSounds;
+
     public void Init() {
         AudioSource = GetComponent<AudioSource>();
         AudioSource.volume = Volume.Volume - 0.1f;
 
         AddListener();
+        IsInit = true;
     }
 
     public void PlaySound(MusicType type) {
-        AudioClip currentClip;
-
-        switch (type) {
-            case MusicType.UI:
-                currentClip = _environmentSounds.UI;
-                break;
-
-            case MusicType.Gameplay:
-                currentClip = _environmentSounds.Gameplay;
-                break;
-
-            case MusicType.GameOver:
-                currentClip = _environmentSounds.Gameover;
-                break;
-
-            default:
-                throw new ArgumentException($"Invalid MusicType: {type}");
-        }
+        if (IsInit == false)
+            return;
 
         AudioSource.Stop();
-        AudioSource.PlayOneShot(currentClip);
+        AudioSource.PlayOneShot(GetAudioClipByType(type));
     }
 
     public override void AddListener() {
@@ -50,4 +37,20 @@ public class EnvironmentSoundManager : SoundManager {
     }
 
     private void OnVolumeChanged(float value) => AudioSource.volume = Volume.Volume;
+
+    private AudioClip GetAudioClipByType(MusicType type) {
+        switch (type) {
+            case MusicType.UI:
+                return _environmentSounds.UI;
+    
+            case MusicType.Gameplay:
+                return _environmentSounds.Gameplay;
+
+            case MusicType.GameOver:
+                return _environmentSounds.Gameover;
+
+            default:
+                throw new ArgumentException($"Invalid MusicType: {type}");
+        }
+    }
 }

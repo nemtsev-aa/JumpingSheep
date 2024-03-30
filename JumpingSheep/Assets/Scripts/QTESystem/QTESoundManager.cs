@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class QTESoundManager : SoundManager {
     [SerializeField] private QTESoundConfig _config;
+    public QTESoundConfig SoundConfig => _config;
+
 
     private QTESystem _qTESystem;
 

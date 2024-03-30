@@ -19,15 +19,17 @@ public class GlobalInstaller : MonoInstaller {
         BindLevelConfigs();
         BindSaveManager();
         BindUIPrefabs();
-
         BindFactories();
         BindInput();
+
+        _logger.Log("Global Installing Complited");
     }
 
     private void BindServices() {
         _logger = new Logger();
         Container.Bind<Logger>().FromInstance(_logger).AsSingle();
 
+        //Container.Bind<SoundsLoader>().AsSingle();
         Container.Bind<PauseHandler>().AsSingle();
         Container.Bind<Score>().AsSingle();
         Container.Bind<SheepQuantityCounter>().AsSingle();

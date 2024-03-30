@@ -1,14 +1,10 @@
 using System;
 
 public class SettingsDialog : Dialog {
-    public event Action ResetClicked;
+    public static event Action ResetClicked;
 
     private VolumePanel _volumePanel;
     private ResetProgressPanel _resetProgressPanel;
-
-    public override void Init() {
-        base.Init();
-    }
 
     public override void InitializationPanels() {
         _volumePanel = GetPanelByType<VolumePanel>();

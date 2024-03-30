@@ -3,13 +3,12 @@ using System.Threading.Tasks;
 using Zenject;
 
 public class GameDialog : Dialog {
-    public event Action MainMenuClicked;
-    public event Action ResetClicked;
-    public event Action NextLevelClicked;
+    public static event Action MainMenuClicked;
+    public static event Action ResetClicked;
+    public static event Action NextLevelClicked;
 
-    public event Action PlayClicked;
-    public event Action<bool> PauseClicked;
-    public event Action LearningClicked;
+    public static event Action<bool> PauseClicked;
+    public static event Action<bool> LearningClicked;
 
     private PauseHandler _pauseHandler;
     private UICompanentsFactory _factory;
@@ -79,7 +78,10 @@ public class GameDialog : Dialog {
     }
 
     public override void RemoveListeners() {
-        base.RemoveListeners();   
+        base.RemoveListeners();
+
+        _counter.SheepIsOver -= OnSheepIsOver;
+
         _qTESystem.Started -= OnQTESystemStarted;
         _qTESystem.AllEventsCompleted -= OnQTESystemAllEventsCompleted;
 
@@ -164,9 +166,12 @@ public class GameDialog : Dialog {
     }
 
     private void OnNextLevelClicked() {
+        ResetPanels();
+
         NextLevelClicked?.Invoke();
     }
-
+    
+    
     private void OnQTESystemStarted() {
         _navigationPanel.Show(false);
 
@@ -193,7 +198,7 @@ public class GameDialog : Dialog {
         _navigationPanel.Show(false);
         _sheepQuantityPanel.Show(false);
 
-        PauseClicked?.Invoke(true);
+        LearningClicked?.Invoke(true);
     }
 
     private void OnSettingsButtonClicked() {

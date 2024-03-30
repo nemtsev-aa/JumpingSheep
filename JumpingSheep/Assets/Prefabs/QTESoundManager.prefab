@@ -47,14 +47,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Volume: {fileID: 11400000, guid: 00304f30471494f46b53bb6a069049f9, type: 2}
   _config:
-    <SuccesEvent>k__BackingField: {fileID: 8300000, guid: dead1d6755007944b80fa383e0c157d6,
-      type: 3}
-    <FailEvent>k__BackingField: {fileID: 8300000, guid: 0e9a9497989d1b3408899bc5ff0daea0,
-      type: 3}
-    <CompleteSuccess>k__BackingField: {fileID: 8300000, guid: 1a0553014ead42b40b6be33eb7356c5b,
-      type: 3}
-    <CompleteFail>k__BackingField: {fileID: 8300000, guid: 33857f1fc6112be4b85d6559b4249cfa,
-      type: 3}
+    <SuccesEvent>k__BackingField: {fileID: 0}
+    <FailEvent>k__BackingField: {fileID: 0}
+    <CompleteSuccess>k__BackingField: {fileID: 0}
+    <CompleteFail>k__BackingField: {fileID: 0}
 --- !u!82 &6210557946998935079
 AudioSource:
   m_ObjectHideFlags: 0

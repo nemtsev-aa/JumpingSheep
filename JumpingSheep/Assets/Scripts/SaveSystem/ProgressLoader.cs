@@ -19,9 +19,7 @@ public class ProgressLoader {
 
     public PlayerData PlayerData => _playerData;
 
-    public void LoadPlayerData() {
-        _savesManager.Load<PlayerData>(Key, OnLevelProgressLoaded);
-    }
+    public void LoadPlayerData() => _savesManager.Load<PlayerData>(Key, OnLevelProgressLoaded);
 
     public void SaveLevelProgress(PlayerData playerData) {
         _savesManager.Save(Key, playerData, OnLevelProgressSaved);

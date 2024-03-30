@@ -34,6 +34,7 @@ public class SheepQuantityPanel : UIPanel {
             ClearSheepIcons();
             _sheepIconQuantity = _counter.MaxQuantity;
 
+            OnLevelNameChanged(_counter.LevelName); 
             CreateIcons();
         }
     }

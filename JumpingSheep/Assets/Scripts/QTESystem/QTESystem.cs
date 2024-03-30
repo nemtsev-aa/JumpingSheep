@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using UnityEngine;
 using Zenject;
 
 public class QTESystem : IPause, ITickable, IDisposable {
@@ -13,6 +14,7 @@ public class QTESystem : IPause, ITickable, IDisposable {
     private PauseHandler _pauseHandler;
     private readonly QTESoundManager _qTESoundManager;
     private readonly SwipeHandler _swipeHandler;
+    private SoundsLoader _soundsLoader;
 
     private Queue<QTEEvent> _events;
     private readonly List<QTEEventConfig> _eventConfigs;
@@ -23,7 +25,10 @@ public class QTESystem : IPause, ITickable, IDisposable {
     private int _successfulEventCount;
     private bool _isPaused;
 
-    public QTESystem(DiContainer diContainer, PauseHandler pauseHandler, QTEEventConfigs configs, QTESoundManager qTESoundManager, SwipeHandler swipeHandler) {
+    public QTESystem(DiContainer diContainer, PauseHandler pauseHandler,
+                    QTEEventConfigs configs, QTESoundManager qTESoundManager,
+                    SwipeHandler swipeHandler) {
+
         _diContainer = diContainer;
         _pauseHandler = pauseHandler;
         _pauseHandler.Add(this);
@@ -35,6 +40,7 @@ public class QTESystem : IPause, ITickable, IDisposable {
         _qTESoundManager.Init(this);
 
         _swipeHandler = swipeHandler;
+        //_soundsLoader = soundsLoader;
 
         _events = new Queue<QTEEvent>();
     }
@@ -46,7 +52,15 @@ public class QTESystem : IPause, ITickable, IDisposable {
         if (_soundCreated)
             return;
 
-       _diContainer.InstantiatePrefabForComponent<QTESoundManager>(_qTESoundManager).Init(this);
+        QTESoundManager soundManager = _diContainer.InstantiatePrefabForComponent<QTESoundManager>(_qTESoundManager);
+        //List<AudioClip> sounds = _soundsLoader.LoadAssets(soundManager, soundManager.SoundConfig.ClipUrl);
+        
+        //if (sounds != null) {
+        //    soundManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2], sounds[3]);
+        //    soundManager.Init(this);
+        //}
+
+        _soundCreated = true;
     }
 
     public void SetLevelConfig(LevelConfig config) => _levelConfig = config;

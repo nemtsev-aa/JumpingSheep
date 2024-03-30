@@ -17,9 +17,9 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private ProgressLoader _progressLoader;
     private AdManager _adManager;
     private UIManager _uIManager;
-    private DialogSwitcher _dialogSwitcher;
-    private EnvironmentSoundManager _environmentSound;
 
+    private EnvironmentSoundManager _environmentSound;
+    private SheepSFXManager _sheepSFXManager;
     private LevelConfig _currentLevelConfig;
     private QTESystem _qTESystem;
     private Score _score;
@@ -27,12 +27,6 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private Sheep _currentSheep;
     private bool _sheepOver;
     private Switchovers _switchover;
-
-    private MainMenuDialog MainMenuDialog => _uIManager.MainMenuDialog;
-    private LevelSelectionDialog LevelSelectionDialog => _uIManager.LevelSelectionDialog;
-    private GameDialog GameDialog => _uIManager.GameDialog;
-    private SettingsDialog SettingsDialog => _uIManager.SettingsDialog;
-    private AboutDialog AboutDialog => _uIManager.AboutDialog;
 
     [Inject]
     public void Construct(PauseHandler pauseHandler, SheepSpawner spawner,
@@ -49,14 +43,19 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _adManager = adManager;
     }
 
-    public void Init(UIManager uIManager, EnvironmentSoundManager environmentSound) {
+    public void Init(UIManager uIManager, EnvironmentSoundManager environmentSound, SheepSFXManager sheepSFXManager) {
         _uIManager = uIManager;
         _environmentSound = environmentSound;
+        _sheepSFXManager = sheepSFXManager;
 
-        _dialogSwitcher = uIManager.DialogSwitcher;
         AddListener();
 
-        ShowMainMenuDialog();
+        StartGame();
+    }
+
+    private void StartGame() {
+        _environmentSound.PlaySound(MusicType.UI);
+        _uIManager.ShowMainMenuDialog();
     }
 
     public void SetPause(bool isPaused) => _pauseHandler.SetPause(isPaused);
@@ -67,72 +66,8 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _sheepOver = false;
     }
 
-    #region Switching Dialogs
-
-    private void ShowMainMenuDialog() {
-        _environmentSound.PlaySound(MusicType.UI);
-        _dialogSwitcher.ShowDialog(DialogTypes.MainMenu);
-    }
-
-    private void ShowGameplayDialog() {
-        _qTESystem.CreateQTESoundManager();
-        _environmentSound.PlaySound(MusicType.Gameplay);
-        _dialogSwitcher.ShowDialog(DialogTypes.Game); 
-    }
-
-    private void ShowSettings() => _dialogSwitcher.ShowDialog(DialogTypes.Settings);
-
-    private void ShowAboutDialog() => _dialogSwitcher.ShowDialog(DialogTypes.About);
-
-    private void ShowLevelSelectionDialog() {
-        LoadProgress();
-        _dialogSwitcher.ShowDialog(DialogTypes.LevelSelection);
-    }
-        
-    private void MakeTransition() {
-        switch (_switchover) {
-            case Switchovers.MainMenu:
-                ShowMainMenuDialog();
-                break;
-
-            case Switchovers.CurrentLevel:
-                OnLevelStarted(_currentLevelConfig);
-                break;
-
-            case Switchovers.NextLevel:
-                _currentLevelConfig = GetLevelConfigByStatus(LevelStatusTypes.Ready);
-                OnLevelStarted(_currentLevelConfig);
-                break;
-
-            default:
-                throw new ArgumentException($"Invalid Switchovers value: {_switchover}");
-        }
-    }
-
-    #endregion
-
-    #region Dialogs Events
+    #region Service Events
     private void AddListener() {
-        SettingsDialog.BackClicked += OnSettingsDialogBackClicked;
-        SettingsDialog.ResetClicked += OnSettingsDialogResetClicked;
-
-        AboutDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
-        LevelSelectionDialog.BackClicked += _dialogSwitcher.ShowPreviousDialog;
-
-        MainMenuDialog.SettingsDialogShowed += ShowSettings;
-        MainMenuDialog.LevelSelectDialogShowed += ShowLevelSelectionDialog;
-        MainMenuDialog.AboutDialogShowed += ShowAboutDialog;
-
-        LevelSelectionDialog.LevelStarted += OnLevelStarted;
-
-        GameDialog.PlayClicked += StartGameplay;
-        GameDialog.ResetClicked += OnResetClicked;
-        GameDialog.MainMenuClicked += OnMainMenuClicked;
-        GameDialog.PauseClicked += OnPauseClicked;
-        GameDialog.LearningClicked += OnLearningClicked;
-        GameDialog.SettingsClicked += OnSettingsClicked;
-        GameDialog.NextLevelClicked += OnNextLevelClicked;
-
         _spawner.SheepCreated += OnSheepCreated;
         _sheepCounter.SheepIsOver += OnSheepIsOver;
         _qTESystem.EventFinished += OnQTESystemEventFinished;
@@ -140,31 +75,9 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _adManager.FullscreenClosed += OnFullscreenClosed;
         _adManager.RewardedClosed += OnRewardedClosed;
         _adManager.RewardedReward += OnRewardedReward;
-
     }
 
     private void RemoveLisener() {
-        SettingsDialog.BackClicked -= OnSettingsDialogBackClicked;
-        SettingsDialog.ResetClicked -= OnSettingsDialogResetClicked;
-
-        AboutDialog.BackClicked -= _dialogSwitcher.ShowPreviousDialog;
-        LevelSelectionDialog.BackClicked -= _dialogSwitcher.ShowPreviousDialog;
-
-        MainMenuDialog.SettingsDialogShowed -= ShowSettings;
-        MainMenuDialog.LevelSelectDialogShowed -= ShowLevelSelectionDialog;
-        MainMenuDialog.AboutDialogShowed -= ShowAboutDialog;
-
-        LevelSelectionDialog.LevelStarted -= OnLevelStarted;
-
-        GameDialog.PlayClicked -= StartGameplay;
-        GameDialog.ResetClicked -= OnResetClicked;
-        GameDialog.MainMenuClicked -= OnMainMenuClicked;
-        GameDialog.NextLevelClicked -= OnNextLevelClicked;
-
-        GameDialog.PauseClicked -= OnPauseClicked;
-        GameDialog.LearningClicked -= OnLearningClicked;
-        GameDialog.SettingsClicked -= OnSettingsClicked;
-
         _spawner.SheepCreated -= OnSheepCreated;
         _sheepCounter.SheepIsOver -= OnSheepIsOver;
         _qTESystem.EventFinished -= OnQTESystemEventFinished;
@@ -180,7 +93,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     private void OnSheepCreated(Sheep sheep) {
         _currentSheep = sheep;
-        _currentSheep.Init(_qTESystem, _pauseHandler);
+        _currentSheep.Init(_qTESystem, _pauseHandler, _sheepSFXManager);
 
         _currentSheep.EventsHandler.Striked += OnSheepStriked;
         _currentSheep.EventsHandler.Jumped += OnSheepJumped;
@@ -228,18 +141,13 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private void OnRewardedClosed(bool value) { }
 
     #endregion
-    
-    private void LoadProgress() {
-        _progressLoader.LoadPlayerData();
-        var playerData = _progressLoader.PlayerData;
 
-        if (playerData == null)
-            return;
-
-        _configs.UpdateProgress(playerData.LevelProgressDatas);
+    public bool TryProgressLoad() {
+        LoadPlayerProgress();
+        return true;
     }
 
-    private void OnLevelStarted(LevelConfig config) {
+    public void LevelPreparation(LevelConfig config) {
         if (_currentLevelConfig != config)
             _currentLevelConfig = config;
 
@@ -252,44 +160,47 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     private void OnQTESystemEventFinished(bool result) => _score.SetSwipeResult(result);
 
-    private void OnPauseClicked(bool value) => SetPause(value);
+    public void LoadPlayerProgress() {
+        _progressLoader.LoadPlayerData();
+        var playerData = _progressLoader.PlayerData;
 
-    private void OnLearningClicked() => GameDialog.GetPanelByType<LearningPanel>().Show(true);
+        if (playerData == null)
+            return;
 
-    private void OnSettingsClicked() => ShowSettings();
-
-    private void OnSettingsDialogBackClicked() {
-        if (_pauseHandler.IsPaused) {
-            SetPause(false);
-            SettingsDialog.Show(false);
-
-            ShowGameplayDialog();
-        }
-        else
-            _dialogSwitcher.ShowPreviousDialog();
+        _configs.UpdateProgress(playerData.LevelProgressDatas);
     }
 
-    private void OnMainMenuClicked() => FinishGameplay(Switchovers.MainMenu);
-
-    private void OnResetClicked() => FinishGameplay(Switchovers.CurrentLevel);
-
-    private void OnNextLevelClicked() => FinishGameplay(Switchovers.NextLevel);
-
-    private void OnSettingsDialogResetClicked() {
+    public void ResetPlayerProgress() {
         if (_adManager.Platform == GamePush.Platform.YANDEX)
             ResetCloudPlayerProgress();
 
         ResetLocalPlayerProgress();
     }
+    
+    private void SetPlayerProgress() {
+        List<LevelProgressData> data = new List<LevelProgressData>();
+
+        foreach (var iLevelConfig in _configs.Configs) {
+            LevelProgressData progress = iLevelConfig.Progress;
+            data.Add(progress);
+        }
+
+        PlayerData playerData = new PlayerData(data);
+        _progressLoader.SaveLevelProgress(playerData);
+    }
 
     private void StartGameplay() {
-        ShowGameplayDialog();
-
+        _qTESystem.CreateQTESoundManager();
         _environmentSound.PlaySound(MusicType.Gameplay);
         _spawner.CreateSheep(_currentLevelConfig.Color);
     }
+    
+    public void ResumeGameplay() {
+        if (_pauseHandler.IsPaused) 
+            SetPause(false);
+    }
 
-    private void FinishGameplay(Switchovers switchover) {
+    public void FinishGameplay(Switchovers switchover) {
         _switchover = switchover;
 
         if (_score.StarsCount > 0) {
@@ -300,7 +211,8 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
             var sratsCount = _score.StarsCount;
             if (_score.StarsCount > _currentLevelConfig.Progress.StarsCount) {
                 _currentLevelConfig.Progress.SetStarsCount(sratsCount);
-                SaveProgress();
+                
+                SetPlayerProgress();
             }
         }
 
@@ -316,25 +228,14 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
             OnFullscreenClosed(true);
     }
 
-    private void SaveProgress() {
-        List<LevelProgressData> data = new List<LevelProgressData>();
-
-        foreach (var iLevelConfig in _configs.Configs) {
-            LevelProgressData progress = iLevelConfig.Progress;
-            data.Add(progress);
-        }
-
-        PlayerData playerData = new PlayerData(data);
-        _progressLoader.SaveLevelProgress(playerData);
-    }
-
     private void UnlockLevel() {
         int index = _configs.Configs.IndexOf(_currentLevelConfig) + 1;
 
         if (index > _configs.Configs.Count) {
-            ShowMainMenuDialog();
+            StartGame();
         }
-        else {
+        else 
+        {
             var level = _configs.Configs[index];
 
             if (level.Progress.Status == LevelStatusTypes.Locked)
@@ -349,6 +250,29 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private void ResetLocalPlayerProgress() => _progressLoader.ResetLocalPlayerProgress();
 
     private void ResetCloudPlayerProgress() => _progressLoader.ResetCloudPlayerProgress();
+    
+    private void MakeTransition() {
+        switch (_switchover) {
+            case Switchovers.MainMenu:
+                StartGame();
+
+                break;
+
+            case Switchovers.CurrentLevel:
+                LevelPreparation(_currentLevelConfig);
+
+                break;
+
+            case Switchovers.NextLevel:
+                _currentLevelConfig = GetLevelConfigByStatus(LevelStatusTypes.Ready);
+                LevelPreparation(_currentLevelConfig);
+
+                break;
+
+            default:
+                throw new ArgumentException($"Invalid Switchovers value: {_switchover}");
+        }
+    }
 
     public void Dispose() {
         RemoveLisener();

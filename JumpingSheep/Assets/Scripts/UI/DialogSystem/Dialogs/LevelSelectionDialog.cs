@@ -2,7 +2,7 @@ using System;
 using Zenject;
 
 public class LevelSelectionDialog : Dialog {
-    public event Action<LevelConfig> LevelStarted;
+    public static event Action<LevelConfig> LevelStarted;
 
     private LevelConfigs _configs;
     private UICompanentsFactory _factory;
@@ -13,10 +13,6 @@ public class LevelSelectionDialog : Dialog {
     public void Construct(UICompanentsFactory factory, LevelConfigs configs) {
         _factory = factory;
         _configs = configs;
-    }
-
-    public override void Init() {
-        base.Init();
     }
 
     public override void Show(bool value) {

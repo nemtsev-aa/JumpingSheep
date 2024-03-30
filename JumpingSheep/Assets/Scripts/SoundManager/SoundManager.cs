@@ -5,7 +5,8 @@ using UnityEngine;
 public abstract class SoundManager : MonoBehaviour, IDisposable {
     [SerializeField] protected VolumeConfig Volume;
 
-    protected AudioSource AudioSource; 
+    protected AudioSource AudioSource;
+    protected bool IsInit;
 
     public abstract void AddListener();
 
