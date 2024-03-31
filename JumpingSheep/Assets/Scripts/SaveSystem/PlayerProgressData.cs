@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 
 [Serializable]
-public class PlayerData {
+public class PlayerProgressData {
 
-    public PlayerData(List<LevelProgressData> levelProgressDatas) {
+    public PlayerProgressData(List<LevelProgressData> levelProgressDatas) {
         LevelProgressDatas = levelProgressDatas;
     }
-
+    
     public List<LevelProgressData> LevelProgressDatas { get; private set; }
 
 }

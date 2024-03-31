@@ -1,32 +1,68 @@
 using GamePush;
-using Newtonsoft.Json;
 using System;
 using UnityEngine;
 
 public class CloudToFileStorageService : IStorageService {
-    public void Init(string path) { }
-    
+    private const string Key = "DefaultPlayerProgress";
+
+    public void Init(string path) {
+
+    }
+
     public void Load<T>(string key, Action<T> callback) {
-        string stringData = GP_Player.GetString(key);
+        string currentProgressData = GP_Player.GetString(key);
 
-        if (String.IsNullOrEmpty(stringData) == true) {
-            stringData = PlayerPrefs.GetString(key);
+        if (currentProgressData != "")
+            callback?.Invoke(JsonUtility.FromJson<T>(currentProgressData));
+        else {
 
-            if (String.IsNullOrEmpty(stringData) == false)
-                callback?.Invoke(JsonConvert.DeserializeObject<T>(stringData));
+            if (TryLocalProgressDataLoad(out string localData))
+                callback?.Invoke(JsonUtility.FromJson<T>(localData));
+
+            if (TryDefaultProgressDataLoad(out string defaultData))
+                callback?.Invoke(JsonUtility.FromJson<T>(defaultData));
         }
-        else
-            callback?.Invoke(JsonConvert.DeserializeObject<T>(stringData));
     }
 
     public void Save(string key, object data, Action<bool> callback = null) {
-        string stringData = JsonConvert.SerializeObject(data);
+        string stringData = JsonUtility.ToJson(data);
 
-        PlayerPrefs.SetString(key, stringData);
-
+        SaveInPlayerPrefs(stringData);
+        
         GP_Player.Set(key, stringData);
         GP_Player.Sync();
 
         callback?.Invoke(true);
+    }
+
+    public bool TryDefaultProgressDataLoad(out string stringData) {
+        try {
+            stringData = GP_Variables.GetString(Key);
+            return true;
+        }
+        catch (Exception) {
+            stringData = "";
+            return false;
+        }
+    }
+
+    public bool TryLocalProgressDataLoad(out string stringData) {
+        try {
+            stringData = PlayerPrefs.GetString(Key);
+            return true;
+        }
+        catch (Exception) {
+            stringData = "";
+            return false;
+        }
+    }
+
+    public void SaveInPlayerPrefs(string stringData) {
+        try {
+            PlayerPrefs.SetString(Key, stringData);
+        }
+        catch (Exception) {
+            throw;
+        }
     }
 }

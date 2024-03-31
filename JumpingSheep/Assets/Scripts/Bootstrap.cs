@@ -1,57 +1,88 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Zenject;
+using UnityEngine;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 public class Bootstrap : MonoBehaviour {
-    public const float InitDelay = 0.1f;
+    public const int InitDelay = 1;
 
     [SerializeField] private GameplayMediator _gameplayMediator;
     [SerializeField] private UIManager _uIManager;
     [SerializeField] private EnvironmentSoundManager _environmentSoundManager;
     [SerializeField] private SheepSFXManager _sheepSFXManager;
-    [SerializeField] private SoundsLoader _soundsLoader;
 
     private Logger _logger;
-    //private SoundsLoader _soundsLoader;
+    private PlayerProgressManager _playerProgressManager;
+    private SoundsLoader _soundsLoader;
 
     [Inject]
-    public void Construct(Logger logger) {
+    public void Construct(Logger logger, PlayerProgressManager playerProgressManager, SoundsLoader soundsLoader) {
         _logger = logger;
-        //_soundsLoader = soundsLoader;
+        _playerProgressManager = playerProgressManager;
+        _soundsLoader = soundsLoader;
     }
-    
-    private void Start() => StartCoroutine(Init());
 
-    private IEnumerator Init() {
+    private async void Start() => await Init();
+
+    private async Task Init() {
         _logger.Log("Bootstrap Init");
-        _soundsLoader.Init();
 
-        yield return new WaitForSeconds(InitDelay);
-        EnvironmentSoundManagerInit();
-        SheepSFXManagerInit();
+        await SoundsLoading();
 
-        yield return new WaitForSeconds(InitDelay);
+        await _playerProgressManager.LoadProgress();
+
         _uIManager.Init(_gameplayMediator);
         _gameplayMediator.Init(_uIManager, _environmentSoundManager, _sheepSFXManager);
 
         _logger.Log("Bootstrap Complited");
     }
 
+    private async Task<bool> SoundsLoading() {
+        _soundsLoader.Init(_logger);
 
-    private void EnvironmentSoundManagerInit() {
-        List<AudioClip> sounds = _soundsLoader.LoadAssets(_environmentSoundManager.SoundConfig.ClipUrl);
+        bool envSound = await TryEnvironmentSoundManagerInit();
+        bool sfx = await TrySheepSFXManagerInit();
+
+        if (envSound == true && sfx == true) {
+            _logger.Log("Sounds Loading Complited");
+            return true;
+        }
+        else {
+            _logger.Log("Sounds Loading Not Complited");
+            return false;
+        }
+    }
+
+    private async Task<bool> TryEnvironmentSoundManagerInit() {
+        List<AudioClip> sounds = await _soundsLoader.LoadAssets(_environmentSoundManager.SoundConfig.ClipUrl);
+
+        await Task.Delay(InitDelay);
 
         if (sounds != null) {
             _environmentSoundManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2]);
             _environmentSoundManager.Init();
+
+            _logger.Log($"EnvironmentSoundManagerInit Complited: {sounds.Count}");
+            return true;
         }
+
+        _logger.Log($"EnvironmentSoundManagerInit Not Complited: {sounds.Count}");
+        return false;
     }
 
-    private void SheepSFXManagerInit() {
-        List<AudioClip> sounds = _soundsLoader.LoadAssets(_sheepSFXManager.SoundConfig.ClipUrl);
+    private async Task<bool> TrySheepSFXManagerInit() {
+        List<AudioClip> sounds = await _soundsLoader.LoadAssets(_sheepSFXManager.SoundConfig.ClipUrl);
 
-        if (sounds != null) 
+        await Task.Delay(InitDelay);
+
+        if (sounds != null) {
             _sheepSFXManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2], sounds[3]);
+
+            _logger.Log($"SheepSFXManagerInit Complited: {sounds.Count}");
+            return true;
+        }
+
+        _logger.Log($"SheepSFXManagerInit Not Complited: {sounds.Count}");
+        return false;
     }
 }

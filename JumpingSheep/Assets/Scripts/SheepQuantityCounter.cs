@@ -19,7 +19,7 @@ public class SheepQuantityCounter {
         _levelConfig = levelConfig;
 
         MaxQuantity = _levelConfig.SheepCount;
-        LevelName = _levelConfig.Progress.Name;
+        LevelName = _levelConfig.Index.ToString();
         _remainingQuantity = MaxQuantity;
 
         LevelNameChanged?.Invoke(LevelName);

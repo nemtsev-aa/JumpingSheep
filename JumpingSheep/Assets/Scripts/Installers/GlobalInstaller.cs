@@ -29,7 +29,7 @@ public class GlobalInstaller : MonoInstaller {
         _logger = new Logger();
         Container.Bind<Logger>().FromInstance(_logger).AsSingle();
 
-        //Container.Bind<SoundsLoader>().AsSingle();
+        Container.Bind<SoundsLoader>().AsSingle();
         Container.Bind<PauseHandler>().AsSingle();
         Container.Bind<Score>().AsSingle();
         Container.Bind<SheepQuantityCounter>().AsSingle();
@@ -59,6 +59,7 @@ public class GlobalInstaller : MonoInstaller {
 
         Container.Bind<SavesManager>().AsSingle();
         Container.Bind<ProgressLoader>().AsSingle();
+        Container.Bind<PlayerProgressManager>().AsSingle();
     }
 
     private void BindUIPrefabs() {

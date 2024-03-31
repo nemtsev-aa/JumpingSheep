@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-
 public class LevelSelectionPanel : UIPanel {
-    public event Action<LevelConfig> LevelSelected;
+    public event Action<int> LevelSelected;
 
     [SerializeField] private RectTransform _levelSelectionViewParent;
 
     private UICompanentsFactory _factory;
-    private List<LevelConfig> _configs;
+    private PlayerProgressManager _progressManager;
+
+    private List<LevelProgressData> _progressList => _progressManager.LevelProgress;
     private List<LevelStatusView> _views;
 
-    public void Init(LevelConfigs configs, UICompanentsFactory factory) {
-        _configs = configs.Configs;
+    public void Init(PlayerProgressManager progressManager, UICompanentsFactory factory) {
+        _progressManager = progressManager;
         _factory = factory;
 
         CreateLevelStatusViews();
@@ -34,10 +35,10 @@ public class LevelSelectionPanel : UIPanel {
 
     private void CreateLevelStatusViews() {
         _views = new List<LevelStatusView>();
+        var progressList = _progressList;
 
-        foreach (var iConfig in _configs) {
-            LevelProgressData data = iConfig.Progress;
-            LevelStatusViewConfig newConfig = new LevelStatusViewConfig(data.Name, data.Status, data.StarsCount);
+        foreach (var iProgress in progressList) {
+            LevelStatusViewConfig newConfig = new LevelStatusViewConfig(iProgress.Index.ToString(), iProgress.Status, iProgress.StarsCount);
             LevelStatusView newLevelView = _factory.Get<LevelStatusView>(newConfig, _levelSelectionViewParent);
 
             newLevelView.Init(newConfig);
@@ -48,18 +49,17 @@ public class LevelSelectionPanel : UIPanel {
     }
 
     public void ShowCurrentStatuses() {
-        foreach (var iConfig in _configs) {
-            LevelStatusView view = _views.First(config => config.Name == iConfig.Progress.Name);
+        foreach (var iProgress in _progressList) {
+            LevelStatusView view = _views.First(config => config.Name == iProgress.Index.ToString());
 
-            if (iConfig.Progress.Status != view.Status)
-                view.SetStatus(iConfig.Progress.Status);
+            if (iProgress.Status != view.Status)
+                view.SetStatus(iProgress.Status);
         }
     }
 
     private void LevelViewSelected(string name) {
-        LevelConfig levelConfig = _configs.First(config => config.Progress.Name == name);
-        LevelStatusView view = _views.First(config => config.Name == name);
+        LevelProgressData data = _progressList.First(config => config.Index.ToString() == name);
 
-        LevelSelected?.Invoke(levelConfig);
+        LevelSelected?.Invoke(data.Index);
     }
 }

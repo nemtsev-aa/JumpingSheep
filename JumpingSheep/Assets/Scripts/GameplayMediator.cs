@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 public enum Switchovers {
@@ -10,17 +12,22 @@ public enum Switchovers {
 }
 
 public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
+    public const float InitDelay = 0.1f;
+
+    private Logger _logger;
     private PauseHandler _pauseHandler;
     private SheepSpawner _spawner;
     private SheepQuantityCounter _sheepCounter;
     private LevelConfigs _configs;
     private ProgressLoader _progressLoader;
     private AdManager _adManager;
+    private PlayerProgressManager _playerProgressManager;
     private UIManager _uIManager;
 
     private EnvironmentSoundManager _environmentSound;
     private SheepSFXManager _sheepSFXManager;
     private LevelConfig _currentLevelConfig;
+    private LevelProgressData _currentLevelProgressData;
     private QTESystem _qTESystem;
     private Score _score;
 
@@ -29,18 +36,22 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private Switchovers _switchover;
 
     [Inject]
-    public void Construct(PauseHandler pauseHandler, SheepSpawner spawner,
+    public void Construct(Logger logger, PauseHandler pauseHandler, SheepSpawner spawner,
                           QTESystem qTESystem, Score score, SheepQuantityCounter sheepCounter,
-                          LevelConfigs configs, ProgressLoader progressLoader, AdManager adManager) {
+                          LevelConfigs configs, ProgressLoader progressLoader, AdManager adManager, 
+                          PlayerProgressManager playerProgressManager) {
 
+        _logger = logger;
         _pauseHandler = pauseHandler;
         _spawner = spawner;
         _qTESystem = qTESystem;
         _score = score;
         _sheepCounter = sheepCounter;
         _configs = configs;
-        _progressLoader = progressLoader;
         _adManager = adManager;
+
+        _progressLoader = progressLoader;
+        _playerProgressManager = playerProgressManager;
     }
 
     public void Init(UIManager uIManager, EnvironmentSoundManager environmentSound, SheepSFXManager sheepSFXManager) {
@@ -49,7 +60,6 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _sheepSFXManager = sheepSFXManager;
 
         AddListener();
-
         StartGame();
     }
 
@@ -64,6 +74,17 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _sheepCounter.Reset();
         _qTESystem.Reset();
         _sheepOver = false;
+    }
+
+    public void LevelPreparation(LevelConfig config) {
+        if (_currentLevelConfig != config)
+            _currentLevelConfig = config;
+
+        _score.SetLevelConfig(_currentLevelConfig);
+        _sheepCounter.SetLevelConfig(_currentLevelConfig);
+        _qTESystem.SetLevelConfig(_currentLevelConfig);
+
+        StartGameplay();
     }
 
     #region Service Events
@@ -142,51 +163,11 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     #endregion
 
-    public bool TryProgressLoad() {
-        LoadPlayerProgress();
-        return true;
-    }
-
-    public void LevelPreparation(LevelConfig config) {
-        if (_currentLevelConfig != config)
-            _currentLevelConfig = config;
-
-        _score.SetLevelConfig(_currentLevelConfig);
-        _sheepCounter.SetLevelConfig(_currentLevelConfig);
-        _qTESystem.SetLevelConfig(_currentLevelConfig);
-
-        StartGameplay();
-    }
-
-    private void OnQTESystemEventFinished(bool result) => _score.SetSwipeResult(result);
-
-    public void LoadPlayerProgress() {
-        _progressLoader.LoadPlayerData();
-        var playerData = _progressLoader.PlayerData;
-
-        if (playerData == null)
-            return;
-
-        _configs.UpdateProgress(playerData.LevelProgressDatas);
-    }
-
     public void ResetPlayerProgress() {
         if (_adManager.Platform == GamePush.Platform.YANDEX)
             ResetCloudPlayerProgress();
 
         ResetLocalPlayerProgress();
-    }
-    
-    private void SetPlayerProgress() {
-        List<LevelProgressData> data = new List<LevelProgressData>();
-
-        foreach (var iLevelConfig in _configs.Configs) {
-            LevelProgressData progress = iLevelConfig.Progress;
-            data.Add(progress);
-        }
-
-        PlayerData playerData = new PlayerData(data);
-        _progressLoader.SaveLevelProgress(playerData);
     }
 
     private void StartGameplay() {
@@ -195,7 +176,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _spawner.CreateSheep(_currentLevelConfig.Color);
     }
     
-    public void ResumeGameplay() {
+    private void ResumeGameplay() {
         if (_pauseHandler.IsPaused) 
             SetPause(false);
     }
@@ -203,14 +184,16 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     public void FinishGameplay(Switchovers switchover) {
         _switchover = switchover;
 
-        if (_score.StarsCount > 0) {
+        var starsCount = _score.StarsCount;
+
+        if (starsCount > 0) {
             UnlockLevel();
 
-            _currentLevelConfig.Progress.SetStatus(LevelStatusTypes.Complited);
-
-            var sratsCount = _score.StarsCount;
-            if (_score.StarsCount > _currentLevelConfig.Progress.StarsCount) {
-                _currentLevelConfig.Progress.SetStarsCount(sratsCount);
+            var playerStarsCount = _playerProgressManager.CurrentLevelProgress.StarsCount;
+            _currentLevelProgressData = new LevelProgressData(LevelStatusTypes.Complited, _currentLevelConfig.Index, playerStarsCount);
+            
+            if (starsCount > playerStarsCount) {
+                _currentLevelProgressData.SetStarsCount(starsCount);
                 
                 SetPlayerProgress();
             }
@@ -221,6 +204,9 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         ShowFullScreenAds();
     }
 
+    private void SetPlayerProgress() =>
+        _playerProgressManager.UpdateProgressByLevel(_currentLevelProgressData);
+        
     private void ShowFullScreenAds() {
         if (_adManager != null && _adManager.Platform == GamePush.Platform.YANDEX)
             _adManager.ShowFullScreen();
@@ -237,19 +223,18 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         else 
         {
             var level = _configs.Configs[index];
+            LevelStatusTypes currentStatus = _playerProgressManager.GetLevelProgressByName(level.Index);
 
-            if (level.Progress.Status == LevelStatusTypes.Locked)
-                level.Progress.SetStatus(LevelStatusTypes.Ready);
+            if (currentStatus == LevelStatusTypes.Locked) {
+                var data = new LevelProgressData(LevelStatusTypes.Ready, level.Index, 0);
+                _playerProgressManager.UpdateProgressByLevel(data);
+            }
         }
     }
 
-    private LevelConfig GetLevelConfigByStatus(LevelStatusTypes status) {
-        return _configs.Configs.First(config => config.Progress.Status == status);
-    }
+    private void ResetLocalPlayerProgress() => _playerProgressManager.ResetLocalPlayerProgress();
 
-    private void ResetLocalPlayerProgress() => _progressLoader.ResetLocalPlayerProgress();
-
-    private void ResetCloudPlayerProgress() => _progressLoader.ResetCloudPlayerProgress();
+    private void ResetCloudPlayerProgress() => _playerProgressManager.ResetCloudPlayerProgress();
     
     private void MakeTransition() {
         switch (_switchover) {
@@ -273,6 +258,14 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
                 throw new ArgumentException($"Invalid Switchovers value: {_switchover}");
         }
     }
+
+    private LevelConfig GetLevelConfigByStatus(LevelStatusTypes status) {
+        int readyLevelIndex = _playerProgressManager.GetReadyLevelIndex();
+
+        return _configs.Configs.First(config => config.Index == readyLevelIndex);
+    }
+
+    private void OnQTESystemEventFinished(bool result) => _score.SetSwipeResult(result);
 
     public void Dispose() {
         RemoveLisener();

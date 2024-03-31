@@ -1,48 +1,56 @@
-using GamePush;
 using Newtonsoft.Json;
-using System.Linq;
-using UnityEngine;
+using System.Threading.Tasks;
+using UnityEngine.Networking;
 
 public class ProgressLoader {
     private const string Key = "PlayerData";
+    private const string DefaultPlayerProgress = "https://s3.eponesh.com/games/files/13071/DefaultPlayerProgress.json";
 
-    private LevelConfigs _configs;
     private SavesManager _savesManager;
     private Logger _logger;
-    private PlayerData _playerData;
+    private PlayerProgressData _playerData;
+    private bool _isLoadComplete;
 
-    public ProgressLoader(LevelConfigs configs, SavesManager savesManager, Logger logger) {
-        _configs = configs;
+    public ProgressLoader(Logger logger, SavesManager savesManager) {
         _savesManager = savesManager;
         _logger = logger;
     }
 
-    public PlayerData PlayerData => _playerData;
+    public PlayerProgressData PlayerProgressData => _playerData;
 
-    public void LoadPlayerData() => _savesManager.Load<PlayerData>(Key, OnLevelProgressLoaded);
+    private CloudToFileStorageService _saveService => (CloudToFileStorageService)_savesManager.CurrentService;
 
-    public void SaveLevelProgress(PlayerData playerData) {
-        _savesManager.Save(Key, playerData, OnLevelProgressSaved);
+    public async Task LoadPlayerProgress() {
+        _isLoadComplete = false;
+        _saveService.Load<PlayerProgressData>(Key, OnLevelProgressLoaded);
+
+        while (_isLoadComplete) {
+            await Task.Yield();
+        }
     }
 
-    public void ResetLocalPlayerProgress() {
-        _configs.ResetProgress();
+    public async Task<string> LoadDefaultProgress() {
+        UnityWebRequest www = UnityWebRequest.Get(DefaultPlayerProgress);
+        www.SendWebRequest();
 
-        PlayerData playerData = new PlayerData(_configs.Progress);
-        string stringData = JsonConvert.SerializeObject(playerData);
+        while (!www.isDone) {
+            await Task.Yield();
+        }
 
-        PlayerPrefs.SetString(Key, stringData);
+        if (www.result == UnityWebRequest.Result.Success) {
+            string defaultProgressData = www.downloadHandler.text;
+
+            _logger.Log($"LoadDefaultProgress complited: {defaultProgressData}");
+            return defaultProgressData;
+        }
+        else {
+            _logger.Log($"LoadDefaultProgress falled: {www.error}");
+            return null;
+        }
+
     }
 
-    public void ResetCloudPlayerProgress() {
-        _configs.ResetProgress();
-
-        PlayerData playerData = new PlayerData(_configs.Progress);
-        string stringData = JsonConvert.SerializeObject(playerData);
-
-        GP_Player.Set(Key, stringData);
-        GP_Player.Sync();
-    }
+    public void SavePlayerProgress(PlayerProgressData playerData) => _savesManager.Save(Key, playerData, OnLevelProgressSaved);
 
     private void OnLevelProgressSaved(bool status) {
         if (status == true)
@@ -51,18 +59,28 @@ public class ProgressLoader {
             _logger.Log("Save falled");
     }
 
-    private void OnLevelProgressLoaded(PlayerData playerData) {
-        if (playerData == null) {
-            _logger.Log($"{Key}.json not found or empty");
+    private async void OnLevelProgressLoaded(PlayerProgressData playerData) {
+        _isLoadComplete = true;
+
+        if (playerData != null) {
+            _playerData = playerData;
+            _logger.Log($"LoadCurrentProgress complited: {_playerData}");
             return;
         }
 
-        if (playerData.LevelProgressDatas.Count() == 0) {
-            _logger.Log($"List {Key} in Json-file is empty");
+        _logger.Log($"{Key}.json not found or empty");
+        _isLoadComplete = false;
+
+        string defaultProgressData = await LoadDefaultProgress();
+        _logger.Log($"DefaultProgressData: {defaultProgressData}");
+
+        if (defaultProgressData != null) {
+            _playerData = JsonConvert.DeserializeObject<PlayerProgressData>(defaultProgressData);
+
+            _logger.Log($"LoadDefaultProgress complited: {_playerData.LevelProgressDatas}");
+            _isLoadComplete = true;
+
             return;
         }
-
-        _playerData = playerData;
-        _logger.Log("Load complited");
     }
 }

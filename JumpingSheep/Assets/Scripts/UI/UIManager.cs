@@ -32,8 +32,6 @@ public class UIManager : MonoBehaviour, IDisposable {
     #region Creating Dialogs
 
     public T GetDialogByType<T>() where T : Dialog {
-        Debug.Log(_dialogs.Count);
-
         var dialog = GetDialogFromList<T>();
 
         if (dialog != null)
@@ -100,6 +98,7 @@ public class UIManager : MonoBehaviour, IDisposable {
         GameDialog.PauseClicked -= OnPauseClicked;
         GameDialog.LearningClicked -= OnLearningClicked;
     }
+    
     #endregion
 
     private void OnShowMainMenuDialog() => DialogSwitcher.ShowDialog<MainMenuDialog>();
@@ -108,15 +107,19 @@ public class UIManager : MonoBehaviour, IDisposable {
 
     private void OnShowAboutDialog() => DialogSwitcher.ShowDialog<AboutDialog>();
    
-    private void OnShowLevelSelectionDialog() {
-        DialogSwitcher.ShowDialog<LevelSelectionDialog>();
-
-        //if (_gameplayMediator.TryProgressLoad()) 
-            
-
-    }
-
+    private void OnShowLevelSelectionDialog() => DialogSwitcher.ShowDialog<LevelSelectionDialog>();
+    
     private void OnShowGameplayDialog() => DialogSwitcher.ShowDialog<GameDialog>();
+    
+    private void OnSettingsDialogBackClicked() => OnShowMainMenuDialog();
+
+    private void OnSettingsDialogResetClicked() => _gameplayMediator.ResetPlayerProgress();
+
+    private void OnLevelStarted(LevelConfig config) {
+        _gameplayMediator.LevelPreparation(config);
+
+        OnShowGameplayDialog();
+    }
 
     #region GameDialog Events
 
@@ -141,16 +144,7 @@ public class UIManager : MonoBehaviour, IDisposable {
         
     #endregion
 
-    private void OnSettingsDialogBackClicked() => OnShowMainMenuDialog();
-
-    private void OnSettingsDialogResetClicked() => _gameplayMediator.ResetPlayerProgress();
-
-    private void OnLevelStarted(LevelConfig config) {
-        _gameplayMediator.LevelPreparation(config);
-        
-        OnShowGameplayDialog(); 
-    }
-
+ 
     public void Dispose() {
         RemoveLisener();
     }
