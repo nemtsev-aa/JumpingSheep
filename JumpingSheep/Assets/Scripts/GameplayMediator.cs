@@ -23,7 +23,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private AdManager _adManager;
     private PlayerProgressManager _playerProgressManager;
     private UIManager _uIManager;
-
+    private SoundsLoader _soundsLoader;
     private EnvironmentSoundManager _environmentSound;
     private SheepSFXManager _sheepSFXManager;
     private LevelConfig _currentLevelConfig;
@@ -54,8 +54,9 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _playerProgressManager = playerProgressManager;
     }
 
-    public void Init(UIManager uIManager, EnvironmentSoundManager environmentSound, SheepSFXManager sheepSFXManager) {
+    public void Init(UIManager uIManager, SoundsLoader soundsLoader, EnvironmentSoundManager environmentSound, SheepSFXManager sheepSFXManager) {
         _uIManager = uIManager;
+        _soundsLoader = soundsLoader;
         _environmentSound = environmentSound;
         _sheepSFXManager = sheepSFXManager;
 
@@ -171,7 +172,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     private void StartGameplay() {
-        _qTESystem.CreateQTESoundManager();
+        _qTESystem.CreateQTESoundManager(_soundsLoader);
         _environmentSound.PlaySound(MusicType.Gameplay);
         _spawner.CreateSheep(_currentLevelConfig.Color);
     }
@@ -189,7 +190,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         if (starsCount > 0) {
             UnlockLevel();
 
-            var playerStarsCount = _playerProgressManager.CurrentLevelProgress.StarsCount;
+            var playerStarsCount = _playerProgressManager.GetStarsCountByLevelIndex(_currentLevelConfig.Index);
             _currentLevelProgressData = new LevelProgressData(LevelStatusTypes.Complited, _currentLevelConfig.Index, playerStarsCount);
             
             if (starsCount > playerStarsCount) {

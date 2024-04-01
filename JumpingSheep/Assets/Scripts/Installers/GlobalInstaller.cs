@@ -11,6 +11,7 @@ public class GlobalInstaller : MonoInstaller {
 
     [SerializeField] private QTEEventConfigs _qTEEventConfigs;
     [SerializeField] private QTESoundManager _qTESoundManager;
+    [SerializeField] private SoundsLoader _soundsLoader;
 
     private Logger _logger;
 
@@ -29,11 +30,11 @@ public class GlobalInstaller : MonoInstaller {
         _logger = new Logger();
         Container.Bind<Logger>().FromInstance(_logger).AsSingle();
 
-        Container.Bind<SoundsLoader>().AsSingle();
         Container.Bind<PauseHandler>().AsSingle();
         Container.Bind<Score>().AsSingle();
         Container.Bind<SheepQuantityCounter>().AsSingle();
         Container.Bind<AdManager>().AsSingle();
+        Container.Bind<SoundsLoader>().FromInstance(_soundsLoader).AsSingle();
 
         if (_qTEEventConfigs.Configs.Count == 0)
             _logger.Log($"List of QTEEventConfigs is empty");

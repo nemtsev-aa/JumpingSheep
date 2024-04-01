@@ -26,7 +26,7 @@ public class LevelStatusView : UICompanent {
 
     private LevelStatusViewConfig _config;
 
-    public string Name => _config.Name;
+    public string Name => _config.Index;
     public LevelStatusTypes Status => _config.CurrentStatus;
 
     public void Init(LevelStatusViewConfig config) {
@@ -58,7 +58,7 @@ public class LevelStatusView : UICompanent {
         _backgroundImage.sprite = _ready;
         _starsParent.gameObject.SetActive(false);
         _lockParent.gameObject.SetActive(false);
-        _nameText.text = _config.Name;
+        _nameText.text = _config.Index;
 
         _config.SetLevelStatus(LevelStatusTypes.Ready);
     }
@@ -78,7 +78,7 @@ public class LevelStatusView : UICompanent {
         ShowStars();
 
         _lockParent.gameObject.SetActive(false);
-        _nameText.text = _config.Name;
+        _nameText.text = _config.Index;
 
         _config.SetLevelStatus(LevelStatusTypes.Complited);
     }
@@ -103,7 +103,7 @@ public class LevelStatusView : UICompanent {
         if (_config.CurrentStatus == LevelStatusTypes.Locked)
             return;
 
-        Selected?.Invoke(_config.Name);
+        Selected?.Invoke(_config.Index);
     }
 
     public override void Dispose() {

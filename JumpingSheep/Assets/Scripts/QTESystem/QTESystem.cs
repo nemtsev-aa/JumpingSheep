@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using UnityEngine;
 using Zenject;
+using UnityEngine;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 public class QTESystem : IPause, ITickable, IDisposable {
     public event Action Started;
@@ -40,7 +40,6 @@ public class QTESystem : IPause, ITickable, IDisposable {
         _qTESoundManager.Init(this);
 
         _swipeHandler = swipeHandler;
-        //_soundsLoader = soundsLoader;
 
         _events = new Queue<QTEEvent>();
     }
@@ -48,19 +47,12 @@ public class QTESystem : IPause, ITickable, IDisposable {
     private int MinSuccessfulEventCount => _levelConfig.QTEConfig.MinSuccessfulEventCount;
     private int EventsCount => _levelConfig.QTEConfig.EventsCount;
 
-    public void CreateQTESoundManager() {
+    public void CreateQTESoundManager(SoundsLoader soundsLoader) {
         if (_soundCreated)
             return;
-
+        _soundsLoader = soundsLoader;
         QTESoundManager soundManager = _diContainer.InstantiatePrefabForComponent<QTESoundManager>(_qTESoundManager);
-        //List<AudioClip> sounds = _soundsLoader.LoadAssets(soundManager, soundManager.SoundConfig.ClipUrl);
-        
-        //if (sounds != null) {
-        //    soundManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2], sounds[3]);
-        //    soundManager.Init(this);
-        //}
-
-        _soundCreated = true;
+        _soundCreated = TryQTESoundManagerInit(soundManager);
     }
 
     public void SetLevelConfig(LevelConfig config) => _levelConfig = config;
@@ -156,6 +148,20 @@ public class QTESystem : IPause, ITickable, IDisposable {
     private void ClearEvent(QTEEvent qTEEvent) {
         qTEEvent.StateChanged -= OnStateChanged;
         qTEEvent.Dispose();
+    }
+    
+    private bool TryQTESoundManagerInit(QTESoundManager soundManager) {
+        //List<AudioClip> sounds = await _soundsLoader.LoadAssets(soundManager.SoundConfig.ClipUrl);
+        List<AudioClip> sounds = _soundsLoader.LoadingClips(soundManager.SoundConfig.ClipUrl);
+
+        if (sounds != null) {
+            soundManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2], sounds[3]);
+            soundManager.Init(this);
+
+            return true;
+        }
+
+        return false;
     }
 
     public void Dispose() {

@@ -24,9 +24,10 @@ public class ProgressLoader {
         _isLoadComplete = false;
         _saveService.Load<PlayerProgressData>(Key, OnLevelProgressLoaded);
 
-        while (_isLoadComplete) {
+        while (_isLoadComplete == false) {
             await Task.Yield();
         }
+
     }
 
     public async Task<string> LoadDefaultProgress() {
@@ -43,7 +44,8 @@ public class ProgressLoader {
             _logger.Log($"LoadDefaultProgress complited: {defaultProgressData}");
             return defaultProgressData;
         }
-        else {
+        else 
+        {
             _logger.Log($"LoadDefaultProgress falled: {www.error}");
             return null;
         }
@@ -72,7 +74,6 @@ public class ProgressLoader {
         _isLoadComplete = false;
 
         string defaultProgressData = await LoadDefaultProgress();
-        _logger.Log($"DefaultProgressData: {defaultProgressData}");
 
         if (defaultProgressData != null) {
             _playerData = JsonConvert.DeserializeObject<PlayerProgressData>(defaultProgressData);

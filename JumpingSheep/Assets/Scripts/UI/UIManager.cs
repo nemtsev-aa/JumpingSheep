@@ -10,7 +10,7 @@ public class UIManager : MonoBehaviour, IDisposable {
 
     private GameplayMediator _gameplayMediator;
 
-    public DialogSwitcher DialogSwitcher { get; private set; }
+     public DialogSwitcher DialogSwitcher { get; private set; }
 
     [Inject]
     public void Constuct(DialogFactory factory) {
@@ -144,7 +144,6 @@ public class UIManager : MonoBehaviour, IDisposable {
         
     #endregion
 
- 
     public void Dispose() {
         RemoveLisener();
     }

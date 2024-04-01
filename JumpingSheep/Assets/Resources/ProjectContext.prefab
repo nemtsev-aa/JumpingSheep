@@ -82,3 +82,5 @@ MonoBehaviour:
   _qTEEventConfigs: {fileID: 11400000, guid: 4ecae17adbfadbb43b84c5dc265150f8, type: 2}
   _qTESoundManager: {fileID: 5819492873292857247, guid: 2402f49df514fc347843a1d999a8282f,
     type: 3}
+  _soundsLoader: {fileID: 7738311420033744425, guid: 14d1c17d4854b3048bafe11332a50f6c,
+    type: 3}

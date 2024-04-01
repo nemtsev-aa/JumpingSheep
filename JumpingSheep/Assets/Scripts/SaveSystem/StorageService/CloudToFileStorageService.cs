@@ -12,7 +12,7 @@ public class CloudToFileStorageService : IStorageService {
     public void Load<T>(string key, Action<T> callback) {
         string currentProgressData = GP_Player.GetString(key);
 
-        if (currentProgressData != "")
+        if (currentProgressData != null)
             callback?.Invoke(JsonUtility.FromJson<T>(currentProgressData));
         else {
 
@@ -28,7 +28,7 @@ public class CloudToFileStorageService : IStorageService {
         string stringData = JsonUtility.ToJson(data);
 
         SaveInPlayerPrefs(stringData);
-        
+
         GP_Player.Set(key, stringData);
         GP_Player.Sync();
 
@@ -38,7 +38,7 @@ public class CloudToFileStorageService : IStorageService {
     public bool TryDefaultProgressDataLoad(out string stringData) {
         try {
             stringData = GP_Variables.GetString(Key);
-            return true;
+            return stringData != "";
         }
         catch (Exception) {
             stringData = "";
@@ -49,7 +49,7 @@ public class CloudToFileStorageService : IStorageService {
     public bool TryLocalProgressDataLoad(out string stringData) {
         try {
             stringData = PlayerPrefs.GetString(Key);
-            return true;
+            return stringData != "";
         }
         catch (Exception) {
             stringData = "";

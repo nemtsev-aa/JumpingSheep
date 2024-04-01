@@ -10,16 +10,19 @@ public class Bootstrap : MonoBehaviour {
     [SerializeField] private UIManager _uIManager;
     [SerializeField] private EnvironmentSoundManager _environmentSoundManager;
     [SerializeField] private SheepSFXManager _sheepSFXManager;
+    private DiContainer _container;
 
     private Logger _logger;
     private PlayerProgressManager _playerProgressManager;
+    private SoundsLoader _soundsLoaderPrefab;
     private SoundsLoader _soundsLoader;
 
     [Inject]
-    public void Construct(Logger logger, PlayerProgressManager playerProgressManager, SoundsLoader soundsLoader) {
+    public void Construct(DiContainer container, Logger logger, PlayerProgressManager playerProgressManager, SoundsLoader soundsLoader) {
+        _container = container;
         _logger = logger;
         _playerProgressManager = playerProgressManager;
-        _soundsLoader = soundsLoader;
+        _soundsLoaderPrefab = soundsLoader;
     }
 
     private async void Start() => await Init();
@@ -27,36 +30,39 @@ public class Bootstrap : MonoBehaviour {
     private async Task Init() {
         _logger.Log("Bootstrap Init");
 
-        await SoundsLoading();
+        SoundsLoading();
 
         await _playerProgressManager.LoadProgress();
 
         _uIManager.Init(_gameplayMediator);
-        _gameplayMediator.Init(_uIManager, _environmentSoundManager, _sheepSFXManager);
+        _gameplayMediator.Init(_uIManager, _soundsLoader, _environmentSoundManager, _sheepSFXManager);
 
         _logger.Log("Bootstrap Complited");
     }
 
-    private async Task<bool> SoundsLoading() {
+    private bool SoundsLoading() {
+        _soundsLoader = _container.InstantiatePrefabForComponent<SoundsLoader>(_soundsLoaderPrefab);
         _soundsLoader.Init(_logger);
 
-        bool envSound = await TryEnvironmentSoundManagerInit();
-        bool sfx = await TrySheepSFXManagerInit();
+        bool envSound = TryEnvironmentSoundManagerInit();
+        bool sfx = TrySheepSFXManagerInit();
 
         if (envSound == true && sfx == true) {
             _logger.Log("Sounds Loading Complited");
             return true;
         }
-        else {
+        else 
+        {
             _logger.Log("Sounds Loading Not Complited");
             return false;
         }
     }
 
-    private async Task<bool> TryEnvironmentSoundManagerInit() {
-        List<AudioClip> sounds = await _soundsLoader.LoadAssets(_environmentSoundManager.SoundConfig.ClipUrl);
+    private bool TryEnvironmentSoundManagerInit() {
+        //List<AudioClip> sounds = await _soundsLoader.LoadAssets(_environmentSoundManager.SoundConfig.ClipUrl);
+        List<AudioClip> sounds = _soundsLoader.LoadingClips(_environmentSoundManager.SoundConfig.ClipUrl);
 
-        await Task.Delay(InitDelay);
+        //await Task.Delay(InitDelay);
 
         if (sounds != null) {
             _environmentSoundManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2]);
@@ -66,14 +72,15 @@ public class Bootstrap : MonoBehaviour {
             return true;
         }
 
-        _logger.Log($"EnvironmentSoundManagerInit Not Complited: {sounds.Count}");
+        _logger.Log($"EnvironmentSoundManagerInit Not Complited");
         return false;
     }
 
-    private async Task<bool> TrySheepSFXManagerInit() {
-        List<AudioClip> sounds = await _soundsLoader.LoadAssets(_sheepSFXManager.SoundConfig.ClipUrl);
+    private bool TrySheepSFXManagerInit() {
+        //List<AudioClip> sounds = await _soundsLoader.LoadAssets(_sheepSFXManager.SoundConfig.ClipUrl);
+        List<AudioClip> sounds = _soundsLoader.LoadingClips(_sheepSFXManager.SoundConfig.ClipUrl);
 
-        await Task.Delay(InitDelay);
+        //await Task.Delay(InitDelay);
 
         if (sounds != null) {
             _sheepSFXManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2], sounds[3]);
@@ -82,7 +89,7 @@ public class Bootstrap : MonoBehaviour {
             return true;
         }
 
-        _logger.Log($"SheepSFXManagerInit Not Complited: {sounds.Count}");
+        _logger.Log($"SheepSFXManagerInit Not Complited");
         return false;
     }
 }

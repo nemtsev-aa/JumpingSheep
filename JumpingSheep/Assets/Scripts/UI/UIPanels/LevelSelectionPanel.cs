@@ -11,7 +11,7 @@ public class LevelSelectionPanel : UIPanel {
     private UICompanentsFactory _factory;
     private PlayerProgressManager _progressManager;
 
-    private List<LevelProgressData> _progressList => _progressManager.LevelProgress;
+    private IReadOnlyList<LevelProgressData> _progressList => _progressManager.LevelProgress;
     private List<LevelStatusView> _views;
 
     public void Init(PlayerProgressManager progressManager, UICompanentsFactory factory) {
@@ -35,9 +35,8 @@ public class LevelSelectionPanel : UIPanel {
 
     private void CreateLevelStatusViews() {
         _views = new List<LevelStatusView>();
-        var progressList = _progressList;
 
-        foreach (var iProgress in progressList) {
+        foreach (var iProgress in _progressList) {
             LevelStatusViewConfig newConfig = new LevelStatusViewConfig(iProgress.Index.ToString(), iProgress.Status, iProgress.StarsCount);
             LevelStatusView newLevelView = _factory.Get<LevelStatusView>(newConfig, _levelSelectionViewParent);
 
