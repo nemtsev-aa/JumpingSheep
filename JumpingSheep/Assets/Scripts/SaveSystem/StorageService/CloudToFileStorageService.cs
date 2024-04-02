@@ -1,4 +1,5 @@
 using GamePush;
+using Newtonsoft.Json;
 using System;
 using UnityEngine;
 
@@ -25,7 +26,7 @@ public class CloudToFileStorageService : IStorageService {
     }
 
     public void Save(string key, object data, Action<bool> callback = null) {
-        string stringData = JsonUtility.ToJson(data);
+        string stringData = JsonConvert.SerializeObject(data);
 
         SaveInPlayerPrefs(stringData);
 

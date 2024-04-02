@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class LevelSelectionPanel : UIPanel {
@@ -9,16 +11,18 @@ public class LevelSelectionPanel : UIPanel {
     [SerializeField] private RectTransform _levelSelectionViewParent;
 
     private UICompanentsFactory _factory;
+    private Logger _logger;
     private PlayerProgressManager _progressManager;
 
     private IReadOnlyList<LevelProgressData> _progressList => _progressManager.LevelProgress;
     private List<LevelStatusView> _views;
 
-    public void Init(PlayerProgressManager progressManager, UICompanentsFactory factory) {
+    public void Init(Logger logger, PlayerProgressManager progressManager, UICompanentsFactory factory) {
+        _logger = logger;
         _progressManager = progressManager;
         _factory = factory;
 
-        CreateLevelStatusViews();
+        StartCoroutine(CreateLevelStatusViews());
     }
 
     public override void Reset() {
@@ -33,7 +37,9 @@ public class LevelSelectionPanel : UIPanel {
         }
     }
 
-    private void CreateLevelStatusViews() {
+    private IEnumerator CreateLevelStatusViews() {
+        _logger.Log($"LevelSelectionPanel: CreateLevelStatusViews started");
+
         _views = new List<LevelStatusView>();
 
         foreach (var iProgress in _progressList) {
@@ -45,15 +51,21 @@ public class LevelSelectionPanel : UIPanel {
 
             _views.Add(newLevelView);
         }
+
+        _logger.Log($"LevelSelectionPanel: CreateLevelStatusViews finished");
+
+        yield return new WaitForSeconds(0.1f);
     }
 
-    public void ShowCurrentStatuses() {
+    public async Task ShowCurrentStatuses() {
         foreach (var iProgress in _progressList) {
             LevelStatusView view = _views.First(config => config.Name == iProgress.Index.ToString());
 
             if (iProgress.Status != view.Status)
                 view.SetStatus(iProgress.Status);
         }
+
+        await Task.Yield();
     }
 
     private void LevelViewSelected(string name) {

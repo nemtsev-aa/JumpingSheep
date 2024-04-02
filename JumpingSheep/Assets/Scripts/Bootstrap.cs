@@ -1,10 +1,10 @@
-using Zenject;
-using UnityEngine;
-using System.Threading.Tasks;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using Zenject;
 
 public class Bootstrap : MonoBehaviour {
-    public const int InitDelay = 1;
+    public const float InitDelay = 0.1f;
 
     [SerializeField] private GameplayMediator _gameplayMediator;
     [SerializeField] private UIManager _uIManager;
@@ -14,6 +14,7 @@ public class Bootstrap : MonoBehaviour {
 
     private Logger _logger;
     private PlayerProgressManager _playerProgressManager;
+
     private SoundsLoader _soundsLoaderPrefab;
     private SoundsLoader _soundsLoader;
 
@@ -21,18 +22,44 @@ public class Bootstrap : MonoBehaviour {
     public void Construct(DiContainer container, Logger logger, PlayerProgressManager playerProgressManager, SoundsLoader soundsLoader) {
         _container = container;
         _logger = logger;
+
         _playerProgressManager = playerProgressManager;
         _soundsLoaderPrefab = soundsLoader;
     }
 
-    private async void Start() => await Init();
+    private void Start() {
+        StartCoroutine(Init());
+        //StartCoroutine(coroutineA());
+    }
 
-    private async Task Init() {
+    //IEnumerator coroutineA() {
+    //    yield return new WaitForSeconds(InitDelay);
+
+    //    yield return StartCoroutine(coroutineB());
+
+    //    yield return StartCoroutine(coroutineC());
+    //}
+
+    //IEnumerator coroutineB() {
+    //    Debug.Log("coroutineB created");
+    //    yield return new WaitForSeconds(2.5f);
+    //    Debug.Log("coroutineB enables coroutineA to run");
+    //}
+
+    //IEnumerator coroutineC() {
+    //    Debug.Log("coroutineC created");
+    //    yield return new WaitForSeconds(2.5f);
+    //    Debug.Log("coroutineC enables coroutineA to run");
+    //}
+
+    private IEnumerator Init() {
         _logger.Log("Bootstrap Init");
 
-        SoundsLoading();
+        yield return new WaitForSeconds(InitDelay);
 
-        await _playerProgressManager.LoadProgress();
+        yield return StartCoroutine(PlayerProgressLoading());
+
+        yield return StartCoroutine(SoundsLoading());
 
         _uIManager.Init(_gameplayMediator);
         _gameplayMediator.Init(_uIManager, _soundsLoader, _environmentSoundManager, _sheepSFXManager);
@@ -40,7 +67,7 @@ public class Bootstrap : MonoBehaviour {
         _logger.Log("Bootstrap Complited");
     }
 
-    private bool SoundsLoading() {
+    private IEnumerator SoundsLoading() {
         _soundsLoader = _container.InstantiatePrefabForComponent<SoundsLoader>(_soundsLoaderPrefab);
         _soundsLoader.Init(_logger);
 
@@ -49,12 +76,12 @@ public class Bootstrap : MonoBehaviour {
 
         if (envSound == true && sfx == true) {
             _logger.Log("Sounds Loading Complited");
-            return true;
+            yield return true;
         }
         else 
         {
             _logger.Log("Sounds Loading Not Complited");
-            return false;
+            yield return false;
         }
     }
 
@@ -91,5 +118,14 @@ public class Bootstrap : MonoBehaviour {
 
         _logger.Log($"SheepSFXManagerInit Not Complited");
         return false;
+    }
+
+    private IEnumerator PlayerProgressLoading() {
+        TryLoadPlayerProgress();
+        yield return null;
+    }
+
+    private async void TryLoadPlayerProgress() {
+        await _playerProgressManager.LoadProgress();
     }
 }

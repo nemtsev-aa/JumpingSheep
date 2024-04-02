@@ -1,4 +1,5 @@
 using GamePush;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,12 +10,12 @@ public class PlayerProgressManager {
     private const string DefaultProgress = "DefaultPlayerProgress";
 
     private Logger _logger;
-    private ProgressLoader _progressLoader;
+    private PlayerProgressLoader _progressLoader;
     private PlayerProgressData _currentProgress;
 
-    public PlayerProgressManager(Logger logger, ProgressLoader progressLoader) {
+    public PlayerProgressManager(Logger logger, SavesManager savesManager) {
         _logger = logger;
-        _progressLoader = progressLoader;
+        _progressLoader = new PlayerProgressLoader(logger, savesManager);
     }
 
     public IReadOnlyList<LevelProgressData> LevelProgress => _currentProgress.LevelProgressDatas;
@@ -22,16 +23,12 @@ public class PlayerProgressManager {
     public async Task LoadProgress() {
         _logger.Log("PlayerProgress Loading");
 
-        await _progressLoader.LoadPlayerProgress();
+        _currentProgress = await _progressLoader.LoadPlayerProgress();
 
-        if (TryPlayerProgressLoad(out PlayerProgressData playerData)) {
-            _currentProgress = playerData;
+        if (_currentProgress != null) 
             _logger.Log("PlayerProgress updated success");
-            return;
-        }
-
-        _logger.Log("PlayerProgress updated fialed");
-
+        else
+            _logger.Log("PlayerProgress updated fialed");  
     }
 
     public void UpdateProgressByLevel(LevelProgressData levelProgressData) {
@@ -59,24 +56,26 @@ public class PlayerProgressManager {
     }
 
     public void ResetLocalPlayerProgress() {
-        string stringData = _progressLoader.LoadDefaultProgress().Result;
+        var defaultPlayerProgress = _progressLoader.LoadDefaultProgress().Result;
 
-        ResetProgress(stringData);
+        ResetProgress(defaultPlayerProgress);
 
-        PlayerPrefs.SetString(DefaultProgress, stringData);
+        string defaultPlayerProgressToString = JsonConvert.SerializeObject(defaultPlayerProgress);
+        PlayerPrefs.SetString(DefaultProgress, defaultPlayerProgressToString);
     }
 
     public void ResetCloudPlayerProgress() {
-        string stringData = _progressLoader.LoadDefaultProgress().Result;
+        var defaultPlayerProgress = _progressLoader.LoadDefaultProgress().Result;
 
-        ResetProgress(stringData);
+        ResetProgress(defaultPlayerProgress);
 
-        GP_Player.Set(PlayerData, stringData);
+        string defaultPlayerProgressToString = JsonConvert.SerializeObject(defaultPlayerProgress);
+        GP_Player.Set(PlayerData, defaultPlayerProgressToString);
         GP_Player.Sync();
     }
 
-    private void ResetProgress(string stringData) {
-        _currentProgress = JsonUtility.FromJson<PlayerProgressData>(stringData);
+    private void ResetProgress(PlayerProgressData data) {
+        _currentProgress = data;
 
         foreach (var iLevelProgress in _currentProgress.LevelProgressDatas) {
             iLevelProgress.SetStatus(LevelStatusTypes.Locked);
@@ -87,16 +86,6 @@ public class PlayerProgressManager {
         _currentProgress.LevelProgressDatas[0].SetStarsCount(0);
 
         _progressLoader.SavePlayerProgress(_currentProgress);
-    }
-
-    private bool TryPlayerProgressLoad(out PlayerProgressData playerData) {
-        if (_progressLoader.PlayerProgressData == null) {
-            playerData = null;
-            return false;
-        }
-
-        playerData = _progressLoader.PlayerProgressData;
-        return true;
     }
 
     private void UpdateProgress() {

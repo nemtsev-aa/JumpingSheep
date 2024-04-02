@@ -32,9 +32,9 @@ public class LevelStatusView : UICompanent {
     public void Init(LevelStatusViewConfig config) {
         _config = config;
 
-        SetStatus(_config.CurrentStatus);
-
         AddListeners();
+
+        SetStatus(_config.CurrentStatus);
     }
 
     public void SetStatus(LevelStatusTypes status) {

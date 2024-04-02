@@ -2,25 +2,24 @@ using Newtonsoft.Json;
 using System.Threading.Tasks;
 using UnityEngine.Networking;
 
-public class ProgressLoader {
+public class PlayerProgressLoader {
     private const string Key = "PlayerData";
     private const string DefaultPlayerProgress = "https://s3.eponesh.com/games/files/13071/DefaultPlayerProgress.json";
 
     private SavesManager _savesManager;
     private Logger _logger;
     private PlayerProgressData _playerData;
+
     private bool _isLoadComplete;
 
-    public ProgressLoader(Logger logger, SavesManager savesManager) {
-        _savesManager = savesManager;
+    public PlayerProgressLoader(Logger logger, SavesManager savesManager) {
         _logger = logger;
+        _savesManager = savesManager;
     }
-
-    public PlayerProgressData PlayerProgressData => _playerData;
 
     private CloudToFileStorageService _saveService => (CloudToFileStorageService)_savesManager.CurrentService;
 
-    public async Task LoadPlayerProgress() {
+    public async Task<PlayerProgressData> LoadPlayerProgress() {
         _isLoadComplete = false;
         _saveService.Load<PlayerProgressData>(Key, OnLevelProgressLoaded);
 
@@ -28,9 +27,10 @@ public class ProgressLoader {
             await Task.Yield();
         }
 
+        return _playerData;
     }
 
-    public async Task<string> LoadDefaultProgress() {
+    public async Task<PlayerProgressData> LoadDefaultProgress() {
         UnityWebRequest www = UnityWebRequest.Get(DefaultPlayerProgress);
         www.SendWebRequest();
 
@@ -38,18 +38,12 @@ public class ProgressLoader {
             await Task.Yield();
         }
 
-        if (www.result == UnityWebRequest.Result.Success) {
-            string defaultProgressData = www.downloadHandler.text;
+        if (www.result == UnityWebRequest.Result.Success)
+            return JsonConvert.DeserializeObject<PlayerProgressData>(www.downloadHandler.text);
+               
 
-            _logger.Log($"LoadDefaultProgress complited: {defaultProgressData}");
-            return defaultProgressData;
-        }
-        else 
-        {
-            _logger.Log($"LoadDefaultProgress falled: {www.error}");
-            return null;
-        }
-
+        _logger.Log($"LoadDefaultProgress falled: {www.error}");
+        return null;
     }
 
     public void SavePlayerProgress(PlayerProgressData playerData) => _savesManager.Save(Key, playerData, OnLevelProgressSaved);
@@ -73,12 +67,12 @@ public class ProgressLoader {
         _logger.Log($"{Key}.json not found or empty");
         _isLoadComplete = false;
 
-        string defaultProgressData = await LoadDefaultProgress();
+        var defaultProgressData = await LoadDefaultProgress();
 
         if (defaultProgressData != null) {
-            _playerData = JsonConvert.DeserializeObject<PlayerProgressData>(defaultProgressData);
+            _playerData = defaultProgressData;
 
-            _logger.Log($"LoadDefaultProgress complited: {_playerData.LevelProgressDatas}");
+            _logger.Log($"LoadDefaultProgress complited!");
             _isLoadComplete = true;
 
             return;

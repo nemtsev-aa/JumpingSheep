@@ -19,7 +19,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private SheepSpawner _spawner;
     private SheepQuantityCounter _sheepCounter;
     private LevelConfigs _configs;
-    private ProgressLoader _progressLoader;
+    private PlayerProgressLoader _progressLoader;
     private AdManager _adManager;
     private PlayerProgressManager _playerProgressManager;
     private UIManager _uIManager;
@@ -38,7 +38,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     [Inject]
     public void Construct(Logger logger, PauseHandler pauseHandler, SheepSpawner spawner,
                           QTESystem qTESystem, Score score, SheepQuantityCounter sheepCounter,
-                          LevelConfigs configs, ProgressLoader progressLoader, AdManager adManager, 
+                          LevelConfigs configs, PlayerProgressLoader progressLoader, AdManager adManager, 
                           PlayerProgressManager playerProgressManager) {
 
         _logger = logger;

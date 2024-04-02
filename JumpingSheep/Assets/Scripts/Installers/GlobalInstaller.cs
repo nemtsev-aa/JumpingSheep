@@ -59,7 +59,7 @@ public class GlobalInstaller : MonoInstaller {
         Container.BindInstance(_saveConfig).AsSingle();
 
         Container.Bind<SavesManager>().AsSingle();
-        Container.Bind<ProgressLoader>().AsSingle();
+        Container.Bind<PlayerProgressLoader>().AsSingle();
         Container.Bind<PlayerProgressManager>().AsSingle();
     }
 
