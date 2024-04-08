@@ -1,5 +1,6 @@
+using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
-using System.Threading.Tasks;
+using System.Linq;
 using UnityEngine.Networking;
 
 public class PlayerProgressLoader {
@@ -19,31 +20,36 @@ public class PlayerProgressLoader {
 
     private CloudToFileStorageService _saveService => (CloudToFileStorageService)_savesManager.CurrentService;
 
-    public async Task<PlayerProgressData> LoadPlayerProgress() {
+    public async UniTask<PlayerProgressData> LoadPlayerProgress() {
         _isLoadComplete = false;
         _saveService.Load<PlayerProgressData>(Key, OnLevelProgressLoaded);
 
         while (_isLoadComplete == false) {
-            await Task.Yield();
+            await UniTask.Yield();
         }
 
         return _playerData;
     }
 
-    public async Task<PlayerProgressData> LoadDefaultProgress() {
-        UnityWebRequest www = UnityWebRequest.Get(DefaultPlayerProgress);
-        www.SendWebRequest();
+    public async UniTask<PlayerProgressData> LoadDefaultProgress() {
 
-        while (!www.isDone) {
-            await Task.Yield();
+        string defaultProgressToString = await GetTextAsync(UnityWebRequest.Get(DefaultPlayerProgress));
+        
+        if (defaultProgressToString != "") {
+            _logger.Log($"LoadDefaultProgress succeeded");
+            
+            return JsonConvert.DeserializeObject<PlayerProgressData>(defaultProgressToString);
         }
+        else 
+        {
+            _logger.Log($"LoadDefaultProgress falled!");
+            return null;
+        } 
+    }
 
-        if (www.result == UnityWebRequest.Result.Success)
-            return JsonConvert.DeserializeObject<PlayerProgressData>(www.downloadHandler.text);
-               
-
-        _logger.Log($"LoadDefaultProgress falled: {www.error}");
-        return null;
+    private async UniTask<string> GetTextAsync(UnityWebRequest req) {
+        var op = await req.SendWebRequest();
+        return op.downloadHandler.text;
     }
 
     public void SavePlayerProgress(PlayerProgressData playerData) => _savesManager.Save(Key, playerData, OnLevelProgressSaved);
@@ -58,13 +64,15 @@ public class PlayerProgressLoader {
     private async void OnLevelProgressLoaded(PlayerProgressData playerData) {
         _isLoadComplete = true;
 
-        if (playerData != null) {
+        if (playerData.LevelProgressDatas != null) {
             _playerData = playerData;
-            _logger.Log($"LoadCurrentProgress complited: {_playerData}");
+            int complitedLevelCount = _playerData.LevelProgressDatas.Where(level => level.Status == LevelStatusTypes.Complited).Count();
+            _logger.Log($"CurrentPlayerProgress: {complitedLevelCount} levels complited");
+
             return;
         }
 
-        _logger.Log($"{Key}.json not found or empty");
+        _logger.Log($"CurrentPlayerProgress is empty!");
         _isLoadComplete = false;
 
         var defaultProgressData = await LoadDefaultProgress();
@@ -72,7 +80,7 @@ public class PlayerProgressLoader {
         if (defaultProgressData != null) {
             _playerData = defaultProgressData;
 
-            _logger.Log($"LoadDefaultProgress complited!");
+            _logger.Log($"DefaultPlayerProgress loading success");
             _isLoadComplete = true;
 
             return;

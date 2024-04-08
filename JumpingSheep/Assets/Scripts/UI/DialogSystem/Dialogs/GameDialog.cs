@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Threading.Tasks;
 using Zenject;
@@ -171,7 +172,6 @@ public class GameDialog : Dialog {
         NextLevelClicked?.Invoke();
     }
     
-    
     private void OnQTESystemStarted() {
         _navigationPanel.Show(false);
 
@@ -180,14 +180,14 @@ public class GameDialog : Dialog {
         _qTEEventsPanel.Show(true);
     }
 
-    private void OnQTESystemAllEventsCompleted(bool value) {
+    private async void OnQTESystemAllEventsCompleted(bool value) {
         ShowInnerGlowPanel(false);
 
-        HideQTEEventsPanel();
+        await HideQTEEventsPanel();
         _navigationPanel.Show(true);
     }
 
-    private async Task HideQTEEventsPanel() {
+    private async UniTask HideQTEEventsPanel() {
         await Task.Delay(TimeSpan.FromSeconds(2));
         _qTEEventsPanel.Show(false);
     }

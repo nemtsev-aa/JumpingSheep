@@ -40,12 +40,19 @@ public class QTESoundManager : SoundManager {
             PlayCompleteFailClip();
     }
 
-    private void PlaySuccesEventClip() => AudioSource.PlayOneShot(_config.SuccesEvent);
+    private void PlaySuccesEventClip() => PlayOneShot(_config.SuccesEvent);
 
-    private void PlayFailEventClip() => AudioSource.PlayOneShot(_config.FailEvent);
+    private void PlayFailEventClip() => PlayOneShot(_config.FailEvent);
 
-    private void PlayCompleteSuccessClip() => AudioSource.PlayOneShot(_config.CompleteSuccess);
+    private void PlayCompleteSuccessClip() => PlayOneShot(_config.CompleteSuccess);
 
-    private void PlayCompleteFailClip() => AudioSource.PlayOneShot(_config.CompleteFail);
+    private void PlayCompleteFailClip() => PlayOneShot(_config.CompleteFail);
+
+    private void PlayOneShot(AudioClip clip) {
+        
+        if (clip != null) 
+            AudioSource.PlayOneShot(clip);
+        
+    }
 
 }

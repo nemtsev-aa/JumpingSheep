@@ -5,9 +5,9 @@ using System.Collections.Generic;
 public class PlayerProgressData {
 
     public PlayerProgressData(List<LevelProgressData> levelProgressDatas) {
-        LevelProgressDatas = levelProgressDatas;
+        LevelProgressDatas = new List<LevelProgressData>();
+        LevelProgressDatas.AddRange(levelProgressDatas);
     }
     
     public List<LevelProgressData> LevelProgressDatas { get; private set; }
-
 }

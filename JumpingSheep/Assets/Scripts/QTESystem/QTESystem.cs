@@ -3,6 +3,7 @@ using Zenject;
 using UnityEngine;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 
 public class QTESystem : IPause, ITickable, IDisposable {
     public event Action Started;
@@ -47,12 +48,14 @@ public class QTESystem : IPause, ITickable, IDisposable {
     private int MinSuccessfulEventCount => _levelConfig.QTEConfig.MinSuccessfulEventCount;
     private int EventsCount => _levelConfig.QTEConfig.EventsCount;
 
-    public void CreateQTESoundManager(SoundsLoader soundsLoader) {
+    public async void CreateQTESoundManager(SoundsLoader soundsLoader) {
         if (_soundCreated)
             return;
+
         _soundsLoader = soundsLoader;
         QTESoundManager soundManager = _diContainer.InstantiatePrefabForComponent<QTESoundManager>(_qTESoundManager);
-        _soundCreated = TryQTESoundManagerInit(soundManager);
+
+        _soundCreated = await TryQTESoundManagerInit(soundManager);
     }
 
     public void SetLevelConfig(LevelConfig config) => _levelConfig = config;
@@ -150,9 +153,9 @@ public class QTESystem : IPause, ITickable, IDisposable {
         qTEEvent.Dispose();
     }
     
-    private bool TryQTESoundManagerInit(QTESoundManager soundManager) {
-        //List<AudioClip> sounds = await _soundsLoader.LoadAssets(soundManager.SoundConfig.ClipUrl);
-        List<AudioClip> sounds = _soundsLoader.LoadingClips(soundManager.SoundConfig.ClipUrl);
+    private async UniTask<bool> TryQTESoundManagerInit(QTESoundManager soundManager) {
+        List<AudioClip> sounds = await _soundsLoader.LoadAssets(soundManager.SoundConfig.ClipUrl);
+        //List<AudioClip> sounds = _soundsLoader.LoadingClips(soundManager.SoundConfig.ClipUrl);
 
         if (sounds != null) {
             soundManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2], sounds[3]);

@@ -1,16 +1,16 @@
+using Cysharp.Threading.Tasks;
 using GamePush;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 
 public class PlayerProgressManager {
     private const string PlayerData = "PlayerData";
     private const string DefaultProgress = "DefaultPlayerProgress";
 
-    private Logger _logger;
-    private PlayerProgressLoader _progressLoader;
+    private readonly Logger _logger;
+    private readonly PlayerProgressLoader _progressLoader;
     private PlayerProgressData _currentProgress;
 
     public PlayerProgressManager(Logger logger, SavesManager savesManager) {
@@ -18,17 +18,17 @@ public class PlayerProgressManager {
         _progressLoader = new PlayerProgressLoader(logger, savesManager);
     }
 
-    public IReadOnlyList<LevelProgressData> LevelProgress => _currentProgress.LevelProgressDatas;
+    private IReadOnlyList<LevelProgressData> LevelProgress => _currentProgress.LevelProgressDatas;
 
-    public async Task LoadProgress() {
-        _logger.Log("PlayerProgress Loading");
+    public async UniTask LoadProgress() {
+        _logger.Log("PlayerProgress Loading...");
 
         _currentProgress = await _progressLoader.LoadPlayerProgress();
 
-        if (_currentProgress != null) 
-            _logger.Log("PlayerProgress updated success");
+        if (_currentProgress.LevelProgressDatas != null) 
+            _logger.Log("PlayerProgress loaded success");
         else
-            _logger.Log("PlayerProgress updated fialed");  
+            _logger.Log("PlayerProgress loaded fialed");  
     }
 
     public void UpdateProgressByLevel(LevelProgressData levelProgressData) {
@@ -55,8 +55,8 @@ public class PlayerProgressManager {
         return data.StarsCount;
     }
 
-    public void ResetLocalPlayerProgress() {
-        var defaultPlayerProgress = _progressLoader.LoadDefaultProgress().Result;
+    public async void ResetLocalPlayerProgress() {
+        var defaultPlayerProgress = await _progressLoader.LoadDefaultProgress();
 
         ResetProgress(defaultPlayerProgress);
 
@@ -64,14 +64,18 @@ public class PlayerProgressManager {
         PlayerPrefs.SetString(DefaultProgress, defaultPlayerProgressToString);
     }
 
-    public void ResetCloudPlayerProgress() {
-        var defaultPlayerProgress = _progressLoader.LoadDefaultProgress().Result;
+    public async void ResetCloudPlayerProgress() {
+        var defaultPlayerProgress = await _progressLoader.LoadDefaultProgress();
 
         ResetProgress(defaultPlayerProgress);
 
         string defaultPlayerProgressToString = JsonConvert.SerializeObject(defaultPlayerProgress);
         GP_Player.Set(PlayerData, defaultPlayerProgressToString);
         GP_Player.Sync();
+    }
+
+    public IReadOnlyList<LevelProgressData> GetLevelProgress() {
+        return _currentProgress.LevelProgressDatas;
     }
 
     private void ResetProgress(PlayerProgressData data) {

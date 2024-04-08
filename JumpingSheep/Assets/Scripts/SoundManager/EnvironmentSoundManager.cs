@@ -25,7 +25,12 @@ public class EnvironmentSoundManager : SoundManager {
             return;
 
         AudioSource.Stop();
-        AudioSource.PlayOneShot(GetAudioClipByType(type));
+
+        var clip = GetAudioClipByType(type);
+
+        if (clip != null) 
+            AudioSource.PlayOneShot(clip);
+          
     }
 
     public override void AddListener() {

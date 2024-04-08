@@ -28,8 +28,18 @@ public class SheepSFXManager : SoundManager {
         _eventsHandler.JumpProgressed -= OnSheepJumpProgressed;
     }
 
-    private void OnSheepMoved() => AudioSource.PlayOneShot(_config.Move);
-    private void OnJumpStarted() => AudioSource.PlayOneShot(_config.JumpStart);
-    private void OnStrikStarted() => AudioSource.PlayOneShot(_config.Strike);
-    private void OnSheepJumpProgressed() => AudioSource.PlayOneShot(_config.JumpEnd);
+    private void OnSheepMoved() => PlayOneShot(_config.Move);
+
+    private void OnJumpStarted() => PlayOneShot(_config.JumpStart);
+
+    private void OnStrikStarted() => PlayOneShot(_config.Strike);
+
+    private void OnSheepJumpProgressed() => PlayOneShot(_config.JumpEnd);
+
+    private void PlayOneShot(AudioClip clip) {
+
+        if (clip != null)
+            AudioSource.PlayOneShot(clip);
+
+    }
 }

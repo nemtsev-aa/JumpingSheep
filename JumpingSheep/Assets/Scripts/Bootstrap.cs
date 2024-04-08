@@ -1,95 +1,68 @@
-using System.Collections;
+using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
 public class Bootstrap : MonoBehaviour {
-    public const float InitDelay = 0.1f;
+    public const int InitDelay = 1;
 
     [SerializeField] private GameplayMediator _gameplayMediator;
     [SerializeField] private UIManager _uIManager;
     [SerializeField] private EnvironmentSoundManager _environmentSoundManager;
     [SerializeField] private SheepSFXManager _sheepSFXManager;
-    private DiContainer _container;
+
 
     private Logger _logger;
     private PlayerProgressManager _playerProgressManager;
 
-    private SoundsLoader _soundsLoaderPrefab;
     private SoundsLoader _soundsLoader;
 
     [Inject]
-    public void Construct(DiContainer container, Logger logger, PlayerProgressManager playerProgressManager, SoundsLoader soundsLoader) {
-        _container = container;
+    public void Construct(Logger logger, PlayerProgressManager playerProgressManager, SoundsLoader soundsLoader) {
         _logger = logger;
 
         _playerProgressManager = playerProgressManager;
-        _soundsLoaderPrefab = soundsLoader;
+        _soundsLoader = soundsLoader;
     }
 
-    private void Start() {
-        StartCoroutine(Init());
-        //StartCoroutine(coroutineA());
+    private async void Start() {
+        await Init();
     }
 
-    //IEnumerator coroutineA() {
-    //    yield return new WaitForSeconds(InitDelay);
-
-    //    yield return StartCoroutine(coroutineB());
-
-    //    yield return StartCoroutine(coroutineC());
-    //}
-
-    //IEnumerator coroutineB() {
-    //    Debug.Log("coroutineB created");
-    //    yield return new WaitForSeconds(2.5f);
-    //    Debug.Log("coroutineB enables coroutineA to run");
-    //}
-
-    //IEnumerator coroutineC() {
-    //    Debug.Log("coroutineC created");
-    //    yield return new WaitForSeconds(2.5f);
-    //    Debug.Log("coroutineC enables coroutineA to run");
-    //}
-
-    private IEnumerator Init() {
+    private async UniTask Init() {
         _logger.Log("Bootstrap Init");
 
-        yield return new WaitForSeconds(InitDelay);
+        await PlayerProgressLoading();
 
-        yield return StartCoroutine(PlayerProgressLoading());
-
-        yield return StartCoroutine(SoundsLoading());
-
+        _logger.Log("UIManager Init");
         _uIManager.Init(_gameplayMediator);
+
+        _logger.Log("GameplayMediator Init");
         _gameplayMediator.Init(_uIManager, _soundsLoader, _environmentSoundManager, _sheepSFXManager);
+
+        await SoundsLoading();
 
         _logger.Log("Bootstrap Complited");
     }
 
-    private IEnumerator SoundsLoading() {
-        _soundsLoader = _container.InstantiatePrefabForComponent<SoundsLoader>(_soundsLoaderPrefab);
-        _soundsLoader.Init(_logger);
+    private async UniTask<bool> SoundsLoading() {
+        _logger.Log("Sounds Loading...");
 
-        bool envSound = TryEnvironmentSoundManagerInit();
-        bool sfx = TrySheepSFXManagerInit();
+        bool envSound = await TryEnvironmentSoundManagerInit();
+        bool sfx = await TrySheepSFXManagerInit();
 
         if (envSound == true && sfx == true) {
             _logger.Log("Sounds Loading Complited");
-            yield return true;
+            return true;
         }
-        else 
-        {
+        else {
             _logger.Log("Sounds Loading Not Complited");
-            yield return false;
+            return false;
         }
     }
 
-    private bool TryEnvironmentSoundManagerInit() {
-        //List<AudioClip> sounds = await _soundsLoader.LoadAssets(_environmentSoundManager.SoundConfig.ClipUrl);
-        List<AudioClip> sounds = _soundsLoader.LoadingClips(_environmentSoundManager.SoundConfig.ClipUrl);
-
-        //await Task.Delay(InitDelay);
+    private async UniTask<bool> TryEnvironmentSoundManagerInit() {
+        List<AudioClip> sounds = await _soundsLoader.LoadAssets(_environmentSoundManager.SoundConfig.ClipUrl);
 
         if (sounds != null) {
             _environmentSoundManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2]);
@@ -103,11 +76,8 @@ public class Bootstrap : MonoBehaviour {
         return false;
     }
 
-    private bool TrySheepSFXManagerInit() {
-        //List<AudioClip> sounds = await _soundsLoader.LoadAssets(_sheepSFXManager.SoundConfig.ClipUrl);
-        List<AudioClip> sounds = _soundsLoader.LoadingClips(_sheepSFXManager.SoundConfig.ClipUrl);
-
-        //await Task.Delay(InitDelay);
+    private async UniTask<bool> TrySheepSFXManagerInit() {
+        List<AudioClip> sounds = await _soundsLoader.LoadAssets(_sheepSFXManager.SoundConfig.ClipUrl);
 
         if (sounds != null) {
             _sheepSFXManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2], sounds[3]);
@@ -120,12 +90,7 @@ public class Bootstrap : MonoBehaviour {
         return false;
     }
 
-    private IEnumerator PlayerProgressLoading() {
-        TryLoadPlayerProgress();
-        yield return null;
-    }
-
-    private async void TryLoadPlayerProgress() {
+    private async UniTask PlayerProgressLoading() {
         await _playerProgressManager.LoadProgress();
     }
 }

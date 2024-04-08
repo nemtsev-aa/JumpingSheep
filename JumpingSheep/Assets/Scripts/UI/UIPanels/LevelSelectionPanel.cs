@@ -14,7 +14,7 @@ public class LevelSelectionPanel : UIPanel {
     private Logger _logger;
     private PlayerProgressManager _progressManager;
 
-    private IReadOnlyList<LevelProgressData> _progressList => _progressManager.LevelProgress;
+    private IReadOnlyList<LevelProgressData> _progressList => _progressManager.GetLevelProgress();
     private List<LevelStatusView> _views;
 
     public void Init(Logger logger, PlayerProgressManager progressManager, UICompanentsFactory factory) {

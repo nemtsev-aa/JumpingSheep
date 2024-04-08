@@ -64,7 +64,7 @@ public class SavesManager : IService, IDisposable {
     private void InitializationServices() {
         _saveServices.Add(SaveType.Binary, new BinaryToFileStorageService());
         _saveServices.Add(SaveType.Json, new JsonToFileStorageService());
-        _saveServices.Add(SaveType.Cloud, new CloudToFileStorageService());
+        _saveServices.Add(SaveType.Cloud, new CloudToFileStorageService(_logger));
 
         foreach (var iService in _saveServices) {
             iService.Value.Init(_savePath);
