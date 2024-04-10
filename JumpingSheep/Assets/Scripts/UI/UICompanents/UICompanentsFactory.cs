@@ -1,30 +1,32 @@
 using UnityEngine;
 using Zenject;
+using System.Linq;
+using System.Collections.Generic;
 
 public class UICompanentsFactory {
-    private UICompanentVisitor _visitor;
     private readonly DiContainer _container;
     private readonly Logger _logger;
+
+    private List<UICompanent> _uiCompanents;
+    private UICompanent _companent;
 
     public UICompanentsFactory(DiContainer container, Logger logger, UICompanentPrefabs companents) {
         _container = container;
         _logger = logger;
 
-        _visitor = new UICompanentVisitor(companents.Prefabs);
+        _uiCompanents = new List<UICompanent>();
+        _uiCompanents.AddRange(companents.Prefabs);
     }
 
-    private UICompanent Companent => _visitor.Companent;
-
     public T Get<T>(UICompanentConfig config, RectTransform parent) where T : UICompanent {
-        _visitor.Visit(config);
+        _companent = _uiCompanents.First(companent => companent is T);
 
-        if (Companent == null) {
+        if (_companent == null) {
             _logger.Log($"Can't find Companent type of: {config} ");
 
             return null;
         }
 
-        return (T)_container.InstantiatePrefabForComponent<UICompanent>(Companent, parent);
-        
+        return (T)_container.InstantiatePrefabForComponent<UICompanent>(_companent, parent);
     }
 }

@@ -32,6 +32,7 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<PauseHandler>().AsSingle();
         Container.Bind<Score>().AsSingle();
         Container.Bind<SheepQuantityCounter>().AsSingle();
+        Container.Bind<TimeCounter>().AsSingle();
         Container.Bind<AdManager>().AsSingle();
         Container.Bind<SoundsLoader>().AsSingle();
 

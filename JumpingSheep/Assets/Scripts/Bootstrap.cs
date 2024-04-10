@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
@@ -10,7 +11,6 @@ public class Bootstrap : MonoBehaviour {
     [SerializeField] private UIManager _uIManager;
     [SerializeField] private EnvironmentSoundManager _environmentSoundManager;
     [SerializeField] private SheepSFXManager _sheepSFXManager;
-
 
     private Logger _logger;
     private PlayerProgressManager _playerProgressManager;
@@ -62,18 +62,29 @@ public class Bootstrap : MonoBehaviour {
     }
 
     private async UniTask<bool> TryEnvironmentSoundManagerInit() {
-        List<AudioClip> sounds = await _soundsLoader.LoadAssets(_environmentSoundManager.SoundConfig.ClipUrl);
+        await _soundsLoader.LoadAsset(_environmentSoundManager.SoundConfig.ClipUrl[0], OnUIAudioClipLoaded);
+
+        List<AudioClip> sounds = await _soundsLoader.LoadAssets(new List<string>() {
+            _environmentSoundManager.SoundConfig.ClipUrl[1],
+            _environmentSoundManager.SoundConfig.ClipUrl[2],
+            }
+        );
 
         if (sounds != null) {
-            _environmentSoundManager.SoundConfig.SetAudioClips(sounds[0], sounds[1], sounds[2]);
-            _environmentSoundManager.Init();
-
+            _environmentSoundManager.SoundConfig.SetAudioClips(sounds[0], sounds[1]);
             _logger.Log($"EnvironmentSoundManagerInit Complited: {sounds.Count}");
+
             return true;
         }
 
         _logger.Log($"EnvironmentSoundManagerInit Not Complited");
         return false;
+    }
+
+    private void OnUIAudioClipLoaded(AudioClip clip) {
+        _environmentSoundManager.SoundConfig.SetUIAudioClip(clip);
+        _environmentSoundManager.Init();
+        _environmentSoundManager.PlaySound(MusicType.UI);
     }
 
     private async UniTask<bool> TrySheepSFXManagerInit() {
@@ -92,5 +103,6 @@ public class Bootstrap : MonoBehaviour {
 
     private async UniTask PlayerProgressLoading() {
         await _playerProgressManager.LoadProgress();
+
     }
 }

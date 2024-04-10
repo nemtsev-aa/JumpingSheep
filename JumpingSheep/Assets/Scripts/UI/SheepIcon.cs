@@ -1,12 +1,14 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
 
 public class SheepIcon : UICompanent {
     private const float _animationDuration = 0.3f;
 
     [SerializeField] private Image _backgroundImage;
     [SerializeField] private Image _iconImage;
+
+    private Tween _fadeTween;
     private float _fadeValue;
 
     public override void Show(bool value) {
@@ -15,5 +17,10 @@ public class SheepIcon : UICompanent {
         StartAnimation();
     }
 
-    private void StartAnimation() => _iconImage.DOFade(_fadeValue, _animationDuration);
+    public void StopAnimation() {
+        _fadeTween.Kill();
+    }
+
+    private void StartAnimation() =>
+        _fadeTween = _iconImage.DOFade(_fadeValue, _animationDuration);
 }

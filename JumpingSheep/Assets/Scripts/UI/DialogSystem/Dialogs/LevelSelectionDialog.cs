@@ -5,13 +5,13 @@ using Zenject;
 public class LevelSelectionDialog : Dialog {
     public static event Action<LevelConfig> LevelStarted;
 
-    private LevelConfigs _configs;
-    private PlayerProgressManager _playerProgressManager;
     private Logger _logger;
+    private LevelConfigs _configs;
     private UICompanentsFactory _factory;
+    private PlayerProgressManager _playerProgressManager;
 
-    private LoadingPlayerProgressPanel _loadingProgressPanel;
     private LevelSelectionPanel _levelSelectionPanel;
+    private LoadingPlayerProgressPanel _loadingProgressPanel;
 
     [Inject]
     public void Construct(Logger logger, UICompanentsFactory factory, LevelConfigs configs, PlayerProgressManager playerProgressManager) {
@@ -24,20 +24,16 @@ public class LevelSelectionDialog : Dialog {
     public override void Show(bool value) {
         base.Show(value);
 
-        if (value) {
-            _loadingProgressPanel.Show(true);
+        if (value) 
             UpdateLevelSelectionPanel();
-        }         
     }
 
     public override void InitializationPanels() {
         _loadingProgressPanel = GetPanelByType<LoadingPlayerProgressPanel>();
         _loadingProgressPanel.Init();
 
-        _levelSelectionPanel = GetPanelByType<LevelSelectionPanel>();
-        _levelSelectionPanel.Init(_logger, _playerProgressManager, _factory);
-        _levelSelectionPanel.Show(false);
-
+        LevelSelectionPanelInit();
+ 
         _logger.Log("LevelSelectionDialog: InitializationPanels completed");
     }
 
@@ -53,11 +49,26 @@ public class LevelSelectionDialog : Dialog {
         _levelSelectionPanel.LevelSelected -= OnLevelSelected;
     }
 
-    private async void UpdateLevelSelectionPanel() {      
+    public override void ResetPanels() {
+        base.ResetPanels();
+    }
+
+    private async void LevelSelectionPanelInit() {
+        _levelSelectionPanel = GetPanelByType<LevelSelectionPanel>();
+        _levelSelectionPanel.Show(false);
+        
+        await _levelSelectionPanel.Init(_logger, _playerProgressManager, _factory);
+        
+        _loadingProgressPanel.Show(false);
+        _levelSelectionPanel.Show(true);
+    }
+
+    private async void UpdateLevelSelectionPanel() {
+        _loadingProgressPanel.Show(true);
+
         await _levelSelectionPanel.ShowCurrentStatuses();
 
         _loadingProgressPanel.Show(false);
-        _levelSelectionPanel.Show(true);
 
         _logger.Log("LevelSelectionDialog: UpdateLevelSelectionPanel completed");
     }
@@ -66,8 +77,5 @@ public class LevelSelectionDialog : Dialog {
         LevelConfig config = _configs.Configs.FirstOrDefault(config => config.Index == levelIndex);
         LevelStarted?.Invoke(config);
     } 
-    
-    public override void ResetPanels() {
-        base.ResetPanels();
-    }
+   
 }

@@ -73,6 +73,7 @@ public class SheepQuantityPanel : UIPanel {
             return;
 
         foreach (var iIcon in _sheepIcons) {
+            iIcon.StopAnimation();
             Destroy(iIcon.gameObject);
         }
     }

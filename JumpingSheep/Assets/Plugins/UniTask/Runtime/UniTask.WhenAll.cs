@@ -9,7 +9,7 @@ namespace Cysharp.Threading.Tasks
 {
     public partial struct UniTask
     {
-        public static UniTask<T[]> WhenAll<T>(params UniTask<T>[] tasks)
+        public static UniTask<T[]> WhenAll<T>(DG.Tweening.Sequence _finishSequence, params UniTask<T>[] tasks)
         {
             if (tasks.Length == 0)
             {

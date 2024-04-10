@@ -24,22 +24,30 @@ public class CloudToFileStorageService : IStorageService {
 
         string currentProgressData = GP_Player.GetString(key);
 
-        if (currentProgressData != null) {
-            _logger.Log($"CloudToFileStorageService_CurrentProgress: {currentProgressData}");
-            callback?.Invoke(JsonConvert.DeserializeObject<T>(currentProgressData));
+        if (currentProgressData != null && currentProgressData !="") {
+            var data = JsonConvert.DeserializeObject<T>(currentProgressData);
+            
+            _logger.Log($"CloudToFileStorageService_CurrentProgress: {data}");
+            callback?.Invoke(data);
+            
             return;
         }
 
         if (TryLocalProgressDataLoad(out string localData)) {
-            _logger.Log($"CloudToFileStorageService_LocalProgress: {localData}");
-            callback?.Invoke(JsonConvert.DeserializeObject<T>(localData));
+            var data = JsonConvert.DeserializeObject<T>(localData);
+            
+            _logger.Log($"CloudToFileStorageService_LocalProgress: {data}");
+            callback?.Invoke(data);
+
             return;
         }
 
         var defaultProgress = await TryDefaultProgressDataLoad();
         if (defaultProgress) {
-            _logger.Log($"CloudToFileStorageService_DefaultProgress: {defaultProgress}");
-            callback?.Invoke(JsonConvert.DeserializeObject<T>(_stringData));
+            var data = JsonConvert.DeserializeObject<T>(_stringData);
+
+            _logger.Log($"CloudToFileStorageService_DefaultProgress: {data}");
+            callback?.Invoke(data);
         }         
     }
 

@@ -4,10 +4,12 @@ using UnityEngine;
 using DG.Tweening;
 using System;
 using TMPro;
+using Cysharp.Threading.Tasks;
 
 public class QTEEventsPanel : UIPanel {
     public const string TrueResultLabelText = "Успех";
     public const string FalseResultLabelText = "Неудача";
+    private const int TimeDelay = 400;
 
     [SerializeField] private RectTransform _qTEEventViewsParent;
     [SerializeField] private TextMeshProUGUI _resoverallResultsultText;
@@ -70,9 +72,9 @@ public class QTEEventsPanel : UIPanel {
         CreateEventViews();
     }
 
-    private void OnAllEventsCompleted(bool resoverallResultsult) {
-        FinishedAnimation(resoverallResultsult);
-        ClearCompanents(400f);
+    private async void OnAllEventsCompleted(bool resoverallResultsult) {
+        ClearCompanents();
+        await FinishedAnimation(resoverallResultsult);
     }
 
     private void CreateEventViews() {
@@ -89,10 +91,7 @@ public class QTEEventsPanel : UIPanel {
         }
     }
 
-    private async void ClearCompanents(double delay = 0f) {
-
-        await Task.Delay(TimeSpan.FromMilliseconds(delay));
-
+    private void ClearCompanents() {
         if (_eventViews.Count == 0)
             return;
 
@@ -103,7 +102,7 @@ public class QTEEventsPanel : UIPanel {
         Reset();
     }
 
-    private void FinishedAnimation(bool status) {
+    private async UniTask FinishedAnimation(bool status) {
         _qTEEventViewsParent.gameObject.SetActive(false);
 
         string text = status ? TrueResultLabelText : FalseResultLabelText;
@@ -117,8 +116,13 @@ public class QTEEventsPanel : UIPanel {
         _finishSequence.Append(textTransform.DOScale(Vector3.one * 1.5f, 0.3f).SetEase(Ease.InOutSine))
             .Append(textTransform.DOScale(Vector3.one, 1f).SetEase(Ease.InElastic))
             .Insert(0, _resoverallResultsultText.DOColor(textColor, 0.3f))
+            .AppendCallback(() => { Show(false); })
             .Play();
+
+
+        await UniTask.WhenAll<Sequence>(_finishSequence);
     }
+
 
     public override void Dispose() {
         base.Dispose();

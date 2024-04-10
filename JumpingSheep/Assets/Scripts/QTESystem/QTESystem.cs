@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
 public class QTESystem : IPause, ITickable, IDisposable {
+    private const int TimeDelay = 300;
+
     public event Action Started;
     public event Action<IReadOnlyList<QTEEvent>> EventsCreated;
     public event Action<bool> AllEventsCompleted;
@@ -25,6 +27,7 @@ public class QTESystem : IPause, ITickable, IDisposable {
     private QTEEvent _currentEvent;
     private int _successfulEventCount;
     private bool _isPaused;
+    
 
     public QTESystem(DiContainer diContainer, PauseHandler pauseHandler,
                     QTEEventConfigs configs, QTESoundManager qTESoundManager,
@@ -111,7 +114,7 @@ public class QTESystem : IPause, ITickable, IDisposable {
             return;
         }
 
-        SummingUpResults(300f);
+        SummingUpResults(TimeDelay);
     }
 
     private void OnStateChanged(QTEEventState state) {
@@ -132,11 +135,11 @@ public class QTESystem : IPause, ITickable, IDisposable {
         StartNextEvent();
     }
 
-    private async void SummingUpResults(double delay) {
+    private async void SummingUpResults(int delay) {
         bool executionResult = _successfulEventCount >= MinSuccessfulEventCount;
         _successfulEventCount = 0;
 
-        await Task.Delay(TimeSpan.FromMilliseconds(delay));
+        await UniTask.Delay(delay);
         AllEventsCompleted?.Invoke(executionResult);
     }
 

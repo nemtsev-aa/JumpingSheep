@@ -65,7 +65,6 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     }
 
     private void StartGame() {
-        _environmentSound.PlaySound(MusicType.UI);
         _uIManager.ShowMainMenuDialog();
     }
 

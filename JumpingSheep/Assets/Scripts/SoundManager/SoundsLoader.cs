@@ -1,11 +1,10 @@
 using System;
 using UnityEngine;
-using System.Threading;
-using System.Collections;
+using UnityEngine.Networking;
 using Cysharp.Threading.Tasks;
+using System.Threading;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnityEngine.Networking;
 
 public class SoundsLoader {
     private const int Timeout = 5;
@@ -42,8 +41,35 @@ public class SoundsLoader {
         else
             return _audioClips;
     }
+    
+    public async UniTask LoadAsset(string url, Action<AudioClip> callback) {
+        if (_inProcess || _isAssetsLoaded)
+            return;
 
-    private async UniTask Load(string url, int id) {
+        _inProcess = true;
+
+        var cts = new CancellationTokenSource();
+        cts.CancelAfterSlim(TimeSpan.FromSeconds(Timeout));
+
+        try {
+            UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.MPEG);
+            await www.SendWebRequest().WithCancellation(cts.Token);
+
+            _inProcess = false;
+
+            if (www.result == UnityWebRequest.Result.Success) {
+                AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
+                callback?.Invoke(clip);
+            }
+        }
+        catch (OperationCanceledException ex) {
+
+            if (ex.CancellationToken == cts.Token)
+                _logger.Log("SoundsLoader: Timeout");
+        }
+    }
+
+    public async UniTask Load(string url, int id) {
         var cts = new CancellationTokenSource();
         cts.CancelAfterSlim(TimeSpan.FromSeconds(Timeout));
 

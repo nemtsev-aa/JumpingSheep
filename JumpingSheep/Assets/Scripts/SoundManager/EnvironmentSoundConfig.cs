@@ -16,6 +16,15 @@ public class EnvironmentSoundConfig : SoundConfig {
     [field: SerializeField] public AudioClip Gameplay { get; private set; }
     [field: SerializeField] public AudioClip Gameover { get; private set; }
 
+    public void SetUIAudioClip(AudioClip uI) {
+        UI = uI;
+    }
+
+    public void SetAudioClips(AudioClip gameplay, AudioClip gameover) {
+        Gameplay = gameplay;
+        Gameover = gameover;
+    }
+
     public void SetAudioClips(AudioClip uI, AudioClip gameplay, AudioClip gameover) {
         UI = uI;
         Gameplay = gameplay;

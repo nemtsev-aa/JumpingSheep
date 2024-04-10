@@ -180,16 +180,9 @@ public class GameDialog : Dialog {
         _qTEEventsPanel.Show(true);
     }
 
-    private async void OnQTESystemAllEventsCompleted(bool value) {
+    private void OnQTESystemAllEventsCompleted(bool value) {
         ShowInnerGlowPanel(false);
-
-        await HideQTEEventsPanel();
         _navigationPanel.Show(true);
-    }
-
-    private async UniTask HideQTEEventsPanel() {
-        await Task.Delay(TimeSpan.FromSeconds(2));
-        _qTEEventsPanel.Show(false);
     }
 
     private void OnLearningButtonClicked() {
