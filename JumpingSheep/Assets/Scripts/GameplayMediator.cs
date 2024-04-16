@@ -1,10 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
+
 public enum Switchovers {
     MainMenu,
     CurrentLevel,
@@ -27,7 +25,6 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     private EnvironmentSoundManager _environmentSound;
     private SheepSFXManager _sheepSFXManager;
     private LevelConfig _currentLevelConfig;
-    private LevelProgressData _currentLevelProgressData;
     private QTESystem _qTESystem;
     private Score _score;
 
@@ -38,7 +35,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     [Inject]
     public void Construct(Logger logger, PauseHandler pauseHandler, SheepSpawner spawner,
                           QTESystem qTESystem, Score score, SheepQuantityCounter sheepCounter,
-                          LevelConfigs configs, PlayerProgressLoader progressLoader, AdManager adManager, 
+                          LevelConfigs configs, PlayerProgressLoader progressLoader, AdManager adManager,
                           PlayerProgressManager playerProgressManager) {
 
         _logger = logger;
@@ -64,16 +61,19 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         StartGame();
     }
 
-    private void StartGame() {
-        _uIManager.ShowMainMenuDialog();
-    }
-
     public void SetPause(bool isPaused) => _pauseHandler.SetPause(isPaused);
 
     public void Reset() {
         _sheepCounter.Reset();
         _qTESystem.Reset();
         _sheepOver = false;
+    }
+
+    public void ResetPlayerProgress() {
+        if (_adManager.Platform == GamePush.Platform.YANDEX)
+            ResetCloudPlayerProgress();
+
+        ResetLocalPlayerProgress();
     }
 
     public void LevelPreparation(LevelConfig config) {
@@ -87,12 +87,34 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         StartGameplay();
     }
 
+    public void FinishGameplay(Switchovers switchover) {
+        _switchover = switchover;
+
+        var newStarsCount = _score.StarsCount;
+
+        if (newStarsCount > 0) {
+            UnlockLevel();
+
+            var currentLevelIndex = _currentLevelConfig.Index;
+            var oldStarsCount = _playerProgressManager.GetStarsCountByLevelIndex(currentLevelIndex);
+            var currentLevelProgressData = new LevelProgressData(LevelStatusTypes.Complited, currentLevelIndex, Mathf.Max(newStarsCount, oldStarsCount));
+
+            _playerProgressManager.UpdateProgressByLevel(currentLevelProgressData);
+        }
+
+        _playerProgressManager.SavePlayerProgress();
+
+        Reset();
+        MakeTransition();
+    }
+
     #region Service Events
     private void AddListener() {
         _spawner.SheepCreated += OnSheepCreated;
         _sheepCounter.SheepIsOver += OnSheepIsOver;
         _qTESystem.EventFinished += OnQTESystemEventFinished;
 
+        _adManager.FullscreenStarted += OnFullscreenStarted;
         _adManager.FullscreenClosed += OnFullscreenClosed;
         _adManager.RewardedClosed += OnRewardedClosed;
         _adManager.RewardedReward += OnRewardedReward;
@@ -103,6 +125,7 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
         _sheepCounter.SheepIsOver -= OnSheepIsOver;
         _qTESystem.EventFinished -= OnQTESystemEventFinished;
 
+        _adManager.FullscreenStarted -= OnFullscreenStarted;
         _adManager.FullscreenClosed -= OnFullscreenClosed;
         _adManager.RewardedClosed -= OnRewardedClosed;
         _adManager.RewardedReward -= OnRewardedReward;
@@ -155,7 +178,10 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
     #endregion
 
     #region AD Events
-    private void OnFullscreenClosed(bool value) => MakeTransition();
+
+    private void OnFullscreenStarted() => SetPause(true);
+
+    private void OnFullscreenClosed(bool value) => ResumeGameplay();
 
     private void OnRewardedReward(string key) { }
 
@@ -163,95 +189,62 @@ public class GameplayMediator : MonoBehaviour, IPause, IDisposable {
 
     #endregion
 
-    public void ResetPlayerProgress() {
-        if (_adManager.Platform == GamePush.Platform.YANDEX)
-            ResetCloudPlayerProgress();
-
-        ResetLocalPlayerProgress();
-    }
+    private void StartGame() => _uIManager.ShowMainMenuDialog();
 
     private void StartGameplay() {
         _qTESystem.CreateQTESoundManager(_soundsLoader);
         _environmentSound.PlaySound(MusicType.Gameplay);
         _spawner.CreateSheep(_currentLevelConfig.Color);
-    }
-    
-    private void ResumeGameplay() {
-        if (_pauseHandler.IsPaused) 
-            SetPause(false);
-    }
-
-    public void FinishGameplay(Switchovers switchover) {
-        _switchover = switchover;
-
-        var starsCount = _score.StarsCount;
-
-        if (starsCount > 0) {
-            UnlockLevel();
-
-            var playerStarsCount = _playerProgressManager.GetStarsCountByLevelIndex(_currentLevelConfig.Index);
-            _currentLevelProgressData = new LevelProgressData(LevelStatusTypes.Complited, _currentLevelConfig.Index, playerStarsCount);
-            
-            if (starsCount > playerStarsCount) {
-                _currentLevelProgressData.SetStarsCount(starsCount);
-                
-                SetPlayerProgress();
-            }
-        }
-
-        Reset();
 
         ShowFullScreenAds();
     }
 
-    private void SetPlayerProgress() =>
-        _playerProgressManager.UpdateProgressByLevel(_currentLevelProgressData);
-        
+    private void ResumeGameplay() => SetPause(false);
+
     private void ShowFullScreenAds() {
-        if (_adManager != null && _adManager.Platform == GamePush.Platform.YANDEX)
-            _adManager.ShowFullScreen();
-        else
-            OnFullscreenClosed(true);
+
+        if (_adManager == null)
+            return;
+
+        _adManager.TryShowFullScreen();
     }
 
     private void UnlockLevel() {
-        int index = _configs.Configs.IndexOf(_currentLevelConfig) + 1;
+        var configs = _configs.Configs;
 
-        if (index > _configs.Configs.Count) {
+        int index = configs.IndexOf(_currentLevelConfig) + 1;
+
+        if (index > configs.Count) {
             StartGame();
+            return;
         }
-        else 
-        {
-            var level = _configs.Configs[index];
-            LevelStatusTypes currentStatus = _playerProgressManager.GetLevelProgressByName(level.Index);
 
-            if (currentStatus == LevelStatusTypes.Locked) {
-                var data = new LevelProgressData(LevelStatusTypes.Ready, level.Index, 0);
-                _playerProgressManager.UpdateProgressByLevel(data);
-            }
+        var levelIndex = _configs.Configs[index].Index;
+        LevelStatusTypes currentStatus = _playerProgressManager.GetLevelStatusTypeByIndex(levelIndex);
+
+        if (currentStatus == LevelStatusTypes.Locked) {
+            var data = new LevelProgressData(LevelStatusTypes.Ready, levelIndex, 0);
+            _playerProgressManager.UpdateProgressByLevel(data);
         }
     }
 
     private void ResetLocalPlayerProgress() => _playerProgressManager.ResetLocalPlayerProgress();
 
     private void ResetCloudPlayerProgress() => _playerProgressManager.ResetCloudPlayerProgress();
-    
+
     private void MakeTransition() {
         switch (_switchover) {
             case Switchovers.MainMenu:
                 StartGame();
-
                 break;
 
             case Switchovers.CurrentLevel:
                 LevelPreparation(_currentLevelConfig);
-
                 break;
 
             case Switchovers.NextLevel:
                 _currentLevelConfig = GetLevelConfigByStatus(LevelStatusTypes.Ready);
                 LevelPreparation(_currentLevelConfig);
-
                 break;
 
             default:

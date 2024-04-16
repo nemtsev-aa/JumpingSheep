@@ -15,6 +15,7 @@ public class GlobalInstaller : MonoInstaller {
     private Logger _logger;
 
     public override void InstallBindings() {
+        BindTimeCounter();
         BindServices();
         BindLevelConfigs();
         BindSaveManager();
@@ -24,6 +25,12 @@ public class GlobalInstaller : MonoInstaller {
 
         _logger.Log("Global Installing Complited");
     }
+    private void BindTimeCounter() {
+        TimeCounter timeCounter = new TimeCounter();
+
+        Container.BindInstance(timeCounter).AsSingle();
+        Container.BindInterfacesAndSelfTo<ITickable>().FromInstance(timeCounter).AsSingle();
+    }
 
     private void BindServices() {
         _logger = new Logger();
@@ -32,7 +39,6 @@ public class GlobalInstaller : MonoInstaller {
         Container.Bind<PauseHandler>().AsSingle();
         Container.Bind<Score>().AsSingle();
         Container.Bind<SheepQuantityCounter>().AsSingle();
-        Container.Bind<TimeCounter>().AsSingle();
         Container.Bind<AdManager>().AsSingle();
         Container.Bind<SoundsLoader>().AsSingle();
 

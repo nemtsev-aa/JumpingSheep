@@ -33,14 +33,14 @@ public class PlayerProgressManager {
 
     public void UpdateProgressByLevel(LevelProgressData levelProgressData) {
         LevelProgressData data = _currentProgress.LevelProgressDatas.First(data => data.Index == levelProgressData.Index);
-
+        
         data.SetStatus(levelProgressData.Status);
-        data.SetStarsCount(levelProgressData.StarsCount);
-
-        _progressLoader.SavePlayerProgress(_currentProgress);
+        data.SetStarsCount(levelProgressData.StarsCount); 
     }
 
-    public LevelStatusTypes GetLevelProgressByName(int index) {
+    public void SavePlayerProgress() => _progressLoader.SavePlayerProgress(_currentProgress);
+
+    public LevelStatusTypes GetLevelStatusTypeByIndex(int index) {
         LevelProgressData data = _currentProgress.LevelProgressDatas.First(data => data.Index == index);
         return data.Status;
     }

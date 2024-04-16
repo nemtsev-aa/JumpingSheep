@@ -2,22 +2,23 @@ using GamePush;
 using System;
 
 public class AdManager : IDisposable {
-    private const float AdTimeout = 6000f;
+    private const float AdTimeout = 60f;
 
-    public event Action<string> RewardedReward;
-    public event Action<bool> RewardedClosed;
+    public event Action FullscreenStarted;
     public event Action<bool> FullscreenClosed;
 
+    public event Action<string> RewardedReward;
+    public event Action RewardedStarted;
+    public event Action<bool> RewardedClosed;
+
     private Logger _logger;
-    private PauseHandler _pauseHandler;
     private TimeCounter _timeCounter;
     private bool _isTimeout;
 
     public Platform Platform => GP_Platform.Type();
 
-    public AdManager(Logger logger, PauseHandler pauseHandler, TimeCounter timeCounter) {
+    public AdManager(Logger logger, TimeCounter timeCounter) {
         _logger = logger;
-        _pauseHandler = pauseHandler;
         _timeCounter = timeCounter;
 
         _timeCounter.SetTimeValue(AdTimeout);
@@ -26,14 +27,19 @@ public class AdManager : IDisposable {
         AddListener();
     }
 
-    public void ShowFullScreen() {
+    public bool TryShowFullScreen() {
+        //if (Platform != GamePush.Platform.YANDEX)
+        //    return false;
+
         if (_isTimeout) {
-            _logger.Log("ShowFullScreen: Timeout Active");
-            return;
+            _logger.Log($"ShowFullScreen: Timeout Active - {_timeCounter.RemainingTime}");
+            return false;
         }
 
-        _logger.Log("ShowFullScreen: Timeout Deactive");
+        _logger.Log("ShowFullScreen: Active showed");
+
         GP_Ads.ShowFullscreen();
+        return true;
     } 
 
     public void ShowRevarded() => GP_Ads.ShowRewarded();
@@ -58,40 +64,30 @@ public class AdManager : IDisposable {
         GP_Ads.OnRewardedReward -= GP_Ads_OnRewardedReward;
     }
 
-    private void GP_Ads_OnFullscreenStart() => _pauseHandler.SetPause(true);
+    private void GP_Ads_OnFullscreenStart() => FullscreenStarted?.Invoke();
     
-    private void GP_Ads_OnRewardedStart() => _pauseHandler.SetPause(true);
-    
-    private void GP_Ads_OnFullscreenClose(bool value) {
-        _pauseHandler.SetPause(false);
+    private void GP_Ads_OnRewardedStart() => RewardedStarted?.Invoke();
 
+    private void GP_Ads_OnFullscreenClose(bool value) {
         TimeoutActivate();
         _logger.Log("Fullscreen Ads Closed");
 
         FullscreenClosed?.Invoke(value);
     }
 
-    private void GP_Ads_OnRewardedClose(bool value) {
-        _pauseHandler.SetPause(false);
-        
-        RewardedClosed?.Invoke(value);
-    } 
-
-    private void GP_Ads_OnRewardedReward(string key) {
-        _pauseHandler.SetPause(false);
-        RewardedReward?.Invoke(key);
-    }
-
+    private void GP_Ads_OnRewardedClose(bool value) => RewardedClosed?.Invoke(value);
+    
+    private void GP_Ads_OnRewardedReward(string key) => RewardedReward?.Invoke(key);
+    
     private void TimeoutActivate() {
         _isTimeout = true;
-        _timeCounter.SetWatchStatus(true);
+        _timeCounter.SetTimerStatus(true);
 
         _logger.Log("Timeout Activated");
     }
 
     private void OnTimeoutFinished() {
         _isTimeout = false;
-
         _logger.Log("Timeout Finished");
     }
     
